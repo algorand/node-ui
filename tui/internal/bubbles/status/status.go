@@ -17,28 +17,30 @@ import (
 )
 
 type Model struct {
-	Status  models.NodeStatusResponse
+	Status  models.NodeStatus
 	Network messages.NetworkMsg
 	Err     error
 
 	style             *style.Styles
+	requestor         *messages.Requestor
 	progress          progress.Model
 	processedAcctsPct float64
 	verifiedAcctsPct  float64
 	acquiredBlksPct   float64
 }
 
-func New(style *style.Styles) Model {
+func New(style *style.Styles, requestor *messages.Requestor) Model {
 	return Model{
-		style:    style,
-		progress: progress.New(progress.WithDefaultGradient()),
+		style:     style,
+		progress:  progress.New(progress.WithDefaultGradient()),
+		requestor: requestor,
 	}
 }
 
 func (m Model) Init() tea.Cmd {
 	return tea.Batch(
 		messages.GetNetworkCmd(),
-		messages.GetStatusCmd(),
+		m.requestor.GetStatusCmd(),
 	)
 }
 
@@ -60,7 +62,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			m.acquiredBlksPct = float64(m.Status.CatchpointAcquiredBlocks) / float64(m.Status.CatchpointTotalBlocks)
 		}
 		return m, tea.Tick(100*time.Millisecond, func(time.Time) tea.Msg {
-			return messages.GetStatusCmd()()
+			return m.requestor.GetStatusCmd()()
 		})
 
 	case messages.NetworkMsg:
@@ -106,7 +108,7 @@ func (m Model) View() string {
 	// TODO: get rid of magic number
 	height := style.TopHeight - 2 - 3 // 3 is the padding/margin/border
 	// status
-	if (m.Status != models.NodeStatusResponse{}) {
+	if (m.Status != models.NodeStatus{}) {
 		nextVersion := formatNextVersion(
 			string(m.Status.LastVersion),
 			string(m.Status.NextVersion),
@@ -135,7 +137,7 @@ func (m Model) View() string {
 			height -= 7
 		default:
 			builder.WriteString(fmt.Sprintf("Current round:   %s\n", key.Render(strconv.FormatUint(m.Status.LastRound, 10))))
-			builder.WriteString(fmt.Sprintf("Block wait time: %s\n", time.Second*time.Duration(m.Status.TimeSinceLastRound)))
+			builder.WriteString(fmt.Sprintf("Block wait time: %s\n", time.Nanosecond*time.Duration(m.Status.TimeSinceLastRound)))
 			builder.WriteString(fmt.Sprintf("Sync time:       %s\n", time.Second*time.Duration(m.Status.CatchupTime)))
 			height -= 3
 			// TODO: Display consensus upgrade progress

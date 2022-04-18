@@ -45,12 +45,14 @@ type Model struct {
 
 	styles *style.Styles
 
+	requestor *messages.Requestor
+
 	active activeComponent
 	// remember the last resize so we can re-send it when selecting a different bottom component.
 	lastResize tea.WindowSizeMsg
 }
 
-func New() Model {
+func New(requestor *messages.Requestor) Model {
 	styles := style.DefaultStyles()
 	tab := tabs.New([]string{"EXPLORER", "UTILITIES", "ACCOUNTS", "CONFIGURATION", "HELP"})
 	// The tab content is the only flexible element.
@@ -61,7 +63,7 @@ func New() Model {
 	return Model{
 		active:        explorerTab,
 		styles:        styles,
-		Status:        status.New(styles),
+		Status:        status.New(styles, requestor),
 		Tabs:          tab,
 		BlockExplorer: explorer.NewModel(styles, initialWidth, 0, initialHeight, tabContentMargin),
 		Configs:       configs.New(tabContentMargin),
@@ -70,5 +72,6 @@ func New() Model {
 		Footer:        footer.New(styles),
 		About:         about.New(tabContentMargin, about.GetHelpContent()),
 		Utilities:     about.New(tabContentMargin, about.GetUtilsContent()),
+		requestor:     requestor,
 	}
 }

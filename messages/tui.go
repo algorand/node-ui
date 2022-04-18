@@ -17,6 +17,7 @@
 package messages
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -24,13 +25,11 @@ import (
 	"path"
 	"strings"
 
+	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/types"
 
 	tea "github.com/charmbracelet/bubbletea"
-	//"github.com/algorand/go-algorand/crypto"
-	//"github.com/algorand/go-algorand/data/basics"
-	//"github.com/algorand/go-algorand/node"
 )
 
 var (
@@ -44,6 +43,18 @@ var (
 		"J4AEINCSSLDA7LNBNWM4ZXFCTLTOZT5LG3F5BLMFPJYGFWVCMU37EZI2AM",
 	}
 )
+
+type Requestor struct {
+	client  *algod.Client
+	dataDir string
+}
+
+func MakeRequestor(client *algod.Client, dataDir string) *Requestor {
+	return &Requestor{
+		client:  client,
+		dataDir: dataDir,
+	}
+}
 
 type NetworkMsg struct {
 	GenesisID   string
@@ -61,17 +72,17 @@ func GetNetworkCmd() tea.Cmd {
 }
 
 type StatusMsg struct {
-	Status models.NodeStatusResponse
+	Status models.NodeStatus
 	Error  error
 }
 
-// TODO: client instead of server
-func GetStatusCmd() tea.Cmd {
+func (r Requestor) GetStatusCmd() tea.Cmd {
 	return func() tea.Msg {
+		resp, err := r.client.Status().Do(context.Background())
 		//s, err := s.node.Status()
 		return StatusMsg{
-			Status: models.NodeStatusResponse{},
-			Error:  nil,
+			Status: resp,
+			Error:  err,
 		}
 	}
 }
