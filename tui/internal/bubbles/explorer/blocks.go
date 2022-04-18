@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
-	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/types"
 	table "github.com/calyptia/go-bubble-table"
 	tea "github.com/charmbracelet/bubbletea"
@@ -16,7 +15,7 @@ import (
 // blockItem is used by the list bubble.
 type blockItem struct {
 	Round uint64
-	Block []byte
+	Block models.BlockResponse
 }
 
 // Hacked these in to workaround missing style options in table model
@@ -56,9 +55,7 @@ func proposer(cert *map[string]interface{}) string {
 }
 
 func computeBlockRow(b blockItem) string {
-	var fullBlock models.BlockResponse
-	msgpack.Decode(b.Block, &fullBlock)
-	block := fullBlock.Block
+	block := b.Block.Block
 
 	typeCount := make(map[types.TxType]uint)
 	var paymentsTotal uint64
@@ -107,7 +104,7 @@ func computeBlockRow(b blockItem) string {
 	}
 
 	return fmt.Sprintf("\t%d\t%d\t%f\t%d\t%d\t%d\t%d\t%d\t%d\t%s",
-		len(block.Payset),
+		len(b.Block.Block.Payset),
 		typeCount[types.PaymentTx],
 		float64(paymentsTotal)/float64(10000),
 		typeCount[types.AssetTransferTx],
@@ -116,7 +113,7 @@ func computeBlockRow(b blockItem) string {
 		len(assets),
 		typeCount[types.ApplicationCallTx],
 		len(apps),
-		proposer(fullBlock.Cert))
+		proposer(b.Block.Cert))
 }
 
 func (i blockItem) Render(w io.Writer, model table.Model, index int) {

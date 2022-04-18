@@ -3,6 +3,7 @@ package explorer
 import (
 	"context"
 
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	table "github.com/calyptia/go-bubble-table"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -89,7 +90,9 @@ func (m *Model) getBlocks(first, last uint64) tea.Cmd {
 				result.err = err
 				return result
 			}
-			result.blocks = append(result.blocks, blockItem{i, block})
+			item := blockItem{Round: i}
+			msgpack.Decode(block, &item.Block)
+			result.blocks = append(result.blocks, item)
 		}
 		return result
 	}
@@ -109,10 +112,10 @@ func (m Model) nextBlockCmd(round uint64) tea.Cmd {
 		if err != nil {
 			return BlocksMsg{err: err}
 		}
+		item := blockItem{Round: round}
+		msgpack.Decode(blk, &item.Block)
 		return BlocksMsg{
-			blocks: []blockItem{
-				{Round: round, Block: blk},
-			},
+			blocks: []blockItem{item},
 		}
 	}
 }
@@ -130,8 +133,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var updateCmd tea.Cmd
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
-	case messages.StatusMsg:
-		m.status = msg
 	case tea.KeyMsg:
 		// navigate into explorer views
 		switch {
@@ -142,20 +143,18 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 				m.state = paysetState
 				switch block := m.table.SelectedRow().(type) {
 				case blockItem:
-					// TODO: block to txn
-					//m.transactions = make([]transactionItem, 0)
-					//for _, txn := range block.Payset {
-					//	t := txn
-					//	m.transactions = append(m.transactions, transactionItem{&t})
-					//}
-					m.transactions = append(m.transactions, transactionItem{block.Block})
+					m.transactions = make([]transactionItem, 0)
+					for _, txn := range block.Block.Block.Payset {
+						t := txn
+						m.transactions = append(m.transactions, transactionItem{&t})
+					}
 				}
 				m.initTransactions()
 			case paysetState:
 				m.state = txnState
 				switch txn := m.table.SelectedRow().(type) {
 				case transactionItem:
-					m.initTransaction(txn.TransactionInBlock)
+					m.initTransaction(txn.SignedTxnInBlock)
 				}
 			}
 
@@ -164,8 +163,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			switch m.state {
 			case paysetState:
 				m.state = blockState
-				//m.initBlocks()
-				//return m, tea.Batch(append(cmds, m.getBlocks)...)
+				m.initBlocks()
 			case txnState:
 				m.state = paysetState
 			}

@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/algorand/go-algorand-sdk/encoding/json"
-
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/indent"
+
+	"github.com/algorand/go-algorand-sdk/encoding/json"
+	"github.com/algorand/go-algorand-sdk/types"
 )
 
 var (
@@ -31,10 +32,9 @@ var (
 	}()
 )
 
-func (m *Model) initTransaction(txn []byte) {
+func (m *Model) initTransaction(txn *types.SignedTxnInBlock) {
 	m.txnView.YOffset = 0
 	m.txnView.SetContent(indent.String(string(json.Encode(txn)), 6))
-	//m.txnView.SetContent(indent.String(string(protocol.EncodeJSON(txn)), 6))
 }
 
 func max(a, b int) int {

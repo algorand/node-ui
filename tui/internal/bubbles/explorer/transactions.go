@@ -6,58 +6,46 @@ import (
 	"strconv"
 
 	table "github.com/calyptia/go-bubble-table"
+
+	"github.com/algorand/go-algorand-sdk/types"
 )
 
 // transactionItem is used by the list bubble.
 type transactionItem struct {
-	TransactionInBlock []byte
-	//*transactions.SignedTxnInBlock
+	*types.SignedTxnInBlock
 }
 
-/*
-func formatAmount(txn *transactions.SignedTxnInBlock) string {
+func formatAmount(txn *types.SignedTxnInBlock) string {
 	switch txn.Txn.Type {
-	case protocol.PaymentTx:
-		return fmt.Sprintf("%f", float64(txn.Txn.PaymentTxnFields.Amount.Raw)/10000)
-	case protocol.AssetTransferTx:
+	case types.PaymentTx:
+		return fmt.Sprintf("%f", txn.Txn.Amount.ToAlgos())
+	case types.AssetTransferTx:
 		return strconv.FormatUint(txn.Txn.AssetTransferTxnFields.AssetAmount, 10)
 	}
 	return "-"
 }
-*/
 
 var transactionTableHeader = []string{"  INTRA", "type", "amount", "sigtype", "fee", "has-note", "sender"}
 
 func computeTxnRow(b transactionItem) string {
-	/*
-		var sigtype string
-		if !b.Sig.MsgIsZero() {
-			sigtype = "ed25519"
-		} else if !b.Msig.MsgIsZero() {
-			sigtype = "msig"
-		} else if !b.Lsig.Blank() {
-			sigtype = "lsig"
-		} else {
-			sigtype = "inner-txn"
-		}
-
-		return fmt.Sprintf("\t%s\t%s\t%s\t%d\t%t\t%s",
-			b.Txn.Type,
-			formatAmount(b.SignedTxnInBlock),
-			sigtype,
-			b.Txn.Fee.Raw,
-			len(b.Txn.Note) > 0,
-			b.Txn.Sender.String(),
-		)
-	*/
+	var sigtype string
+	if !(b.Sig == types.Signature{}) {
+		sigtype = "ed25519"
+	} else if !b.Msig.Blank() {
+		sigtype = "msig"
+	} else if !b.Lsig.Blank() {
+		sigtype = "lsig"
+	} else {
+		sigtype = "inner-txn"
+	}
 
 	return fmt.Sprintf("\t%s\t%s\t%s\t%d\t%t\t%s",
-		"pay",
-		"1.234",
-		"ed25519",
-		1000,
-		false,
-		"SENDER ADDR",
+		b.Txn.Type,
+		formatAmount(b.SignedTxnInBlock),
+		sigtype,
+		b.Txn.Fee.ToAlgos(),
+		len(b.Txn.Note) > 0,
+		b.Txn.Sender.String(),
 	)
 }
 
