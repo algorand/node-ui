@@ -65,7 +65,7 @@ func New(requestor *messages.Requestor) Model {
 		styles:        styles,
 		Status:        status.New(styles, requestor),
 		Tabs:          tab,
-		BlockExplorer: explorer.NewModel(styles, initialWidth, 0, initialHeight, tabContentMargin),
+		BlockExplorer: explorer.NewModel(styles, requestor, initialWidth, 0, initialHeight, tabContentMargin),
 		Configs:       configs.New(tabContentMargin),
 		Accounts:      accounts.NewModel(styles, initialHeight, tabContentMargin),
 		Help:          help.New(),

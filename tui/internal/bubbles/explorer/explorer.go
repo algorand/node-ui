@@ -1,7 +1,7 @@
 package explorer
 
 import (
-	"time"
+	"context"
 
 	table "github.com/calyptia/go-bubble-table"
 	"github.com/charmbracelet/bubbles/key"
@@ -9,6 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
+	"github.com/algorand/node-ui/messages"
 	"github.com/algorand/node-ui/tui/internal/constants"
 	"github.com/algorand/node-ui/tui/internal/style"
 )
@@ -20,6 +21,8 @@ const (
 	paysetState
 	txnState
 )
+
+const initialBlocks = 25
 
 type blocks []blockItem
 type txnItems []transactionItem
@@ -33,8 +36,6 @@ type Model struct {
 	heightMargin int
 	style        *style.Styles
 
-	blockPerPage uint
-
 	// for blocks page
 	blocks blocks
 
@@ -45,11 +46,12 @@ type Model struct {
 	//txn transactions.SignedTxnInBlock
 	txn []blocks
 
-	table   table.Model
-	txnView viewport.Model
+	table     table.Model
+	txnView   viewport.Model
+	requestor *messages.Requestor
 }
 
-func NewModel(styles *style.Styles, width, widthMargin, height, heightMargin int) Model {
+func NewModel(styles *style.Styles, requestor *messages.Requestor, width, widthMargin, height, heightMargin int) Model {
 	m := Model{
 		state:        blockState,
 		style:        styles,
@@ -57,6 +59,7 @@ func NewModel(styles *style.Styles, width, widthMargin, height, heightMargin int
 		widthMargin:  widthMargin,
 		height:       height,
 		heightMargin: heightMargin,
+		requestor:    requestor,
 	}
 	m.initBlocks()
 	return m
@@ -67,34 +70,51 @@ type BlocksMsg struct {
 	err    error
 }
 
-func (m Model) InitBlock() tea.Cmd {
-	return m.getLatestBlockHeaders
+func (m Model) InitBlocks() tea.Msg {
+	status, err := m.requestor.Client.Status().Do(context.Background())
+	if err != nil {
+		return BlocksMsg{
+			err: err,
+		}
+	}
+	return m.getBlocks(status.LastRound-initialBlocks, status.LastRound)()
 }
 
-func (m *Model) getLatestBlockHeaders() tea.Msg {
-	// TODO: Only fetch if needed, check current latest vs actual latest
-	var result BlocksMsg
-
-	/*
-		ledger := m.node.Ledger()
-		latest := ledger.Latest()
-		for m.blockPerPage > uint(len(result.blocks)) && latest > 0 {
-			block, cert, err := ledger.BlockCert(latest)
+func (m *Model) getBlocks(first, last uint64) tea.Cmd {
+	return func() tea.Msg {
+		var result BlocksMsg
+		for i := last; i >= first; i-- {
+			block, err := m.requestor.Client.BlockRaw(i).Do(context.Background())
 			if err != nil {
 				result.err = err
 				return result
 			}
-			latest -= 1
-
-			result.blocks = append(result.blocks, blockItem{&block, &cert})
+			result.blocks = append(result.blocks, blockItem{i, block})
 		}
-	*/
-	return result
+		return result
+	}
 }
 
 func (m Model) Init() tea.Cmd {
-	// Default page.
-	return m.getLatestBlockHeaders
+	return m.InitBlocks
+}
+
+func (m Model) nextBlockCmd(round uint64) tea.Cmd {
+	return func() tea.Msg {
+		_, err := m.requestor.Client.StatusAfterBlock(round).Do(context.Background())
+		if err != nil {
+			return BlocksMsg{err: err}
+		}
+		blk, err := m.requestor.Client.BlockRaw(round).Do(context.Background())
+		if err != nil {
+			return BlocksMsg{err: err}
+		}
+		return BlocksMsg{
+			blocks: []blockItem{
+				{Round: round, Block: blk},
+			},
+		}
+	}
 }
 
 func (m *Model) SetSize(width, height int) {
@@ -110,6 +130,8 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var updateCmd tea.Cmd
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
+	case messages.StatusMsg:
+		m.status = msg
 	case tea.KeyMsg:
 		// navigate into explorer views
 		switch {
@@ -142,8 +164,8 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			switch m.state {
 			case paysetState:
 				m.state = blockState
-				m.initBlocks()
-				return m, tea.Batch(append(cmds, m.getLatestBlockHeaders)...)
+				//m.initBlocks()
+				//return m, tea.Batch(append(cmds, m.getBlocks)...)
 			case txnState:
 				m.state = paysetState
 			}
@@ -153,11 +175,13 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		m.SetSize(msg.Width, msg.Height)
 
 	case BlocksMsg:
+		// append blocks
+		backup := m.blocks
 		m.blocks = msg.blocks
-		cmds = append(cmds, tea.Tick(1*time.Second, func(_ time.Time) tea.Msg {
-			// TODO: skip during catchup? Or make more/less frequent?
-			return m.getLatestBlockHeaders()
-		}))
+		for _, blk := range backup {
+			m.blocks = append(m.blocks, blk)
+		}
+		cmds = append(cmds, m.nextBlockCmd(m.blocks[0].Round+1))
 	}
 
 	t, tableCmd := m.table.Update(msg)

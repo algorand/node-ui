@@ -45,13 +45,13 @@ var (
 )
 
 type Requestor struct {
-	client  *algod.Client
+	Client  *algod.Client
 	dataDir string
 }
 
 func MakeRequestor(client *algod.Client, dataDir string) *Requestor {
 	return &Requestor{
-		client:  client,
+		Client:  client,
 		dataDir: dataDir,
 	}
 }
@@ -61,7 +61,7 @@ type NetworkMsg struct {
 	GenesisHash types.Digest
 }
 
-// TODO: client instead of server
+// TODO: Client instead of server
 func GetNetworkCmd() tea.Cmd {
 	return func() tea.Msg {
 		return NetworkMsg{
@@ -78,7 +78,7 @@ type StatusMsg struct {
 
 func (r Requestor) GetStatusCmd() tea.Cmd {
 	return func() tea.Msg {
-		resp, err := r.client.Status().Do(context.Background())
+		resp, err := r.Client.Status().Do(context.Background())
 		//s, err := s.node.Status()
 		return StatusMsg{
 			Status: resp,
@@ -89,7 +89,7 @@ func (r Requestor) GetStatusCmd() tea.Cmd {
 
 type AccountStatusMsg map[types.Address]uint64
 
-// TODO: client instead of server
+// TODO: Client instead of server
 func GetAccountStatusMsg() tea.Cmd {
 	return func() tea.Msg {
 		/*
@@ -116,7 +116,7 @@ func GetAccountStatusMsg() tea.Cmd {
 	}
 }
 
-// TODO: client instead of server
+// TODO: Client instead of server
 func StartFastCatchup(network string) tea.Cmd {
 	return func() tea.Msg {
 		resp, err := http.Get(fmt.Sprintf("https://algorand-catchpoints.s3.us-east-2.amazonaws.com/channel/%s/latest.catchpoint", network))
@@ -161,7 +161,7 @@ func StartFastCatchup(network string) tea.Cmd {
 	}
 }
 
-// TODO: client instead of server
+// TODO: Client instead of server
 func StopFastCatchup(network string) tea.Cmd {
 	return func() tea.Msg {
 		resp, err := http.Get(fmt.Sprintf("https://algorand-catchpoints.s3.us-east-2.amazonaws.com/channel/%s/latest.catchpoint", network))
