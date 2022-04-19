@@ -59,14 +59,40 @@ func MakeRequestor(client *algod.Client, dataDir string) *Requestor {
 type NetworkMsg struct {
 	GenesisID   string
 	GenesisHash types.Digest
+	NodeVersion string
+	Err         error
 }
 
-// TODO: Client instead of server
-func GetNetworkCmd() tea.Cmd {
+func formatVersion(ver models.Version) string {
+	return fmt.Sprintf("%s %d.%d.%d (%s)",
+		ver.Build.Channel,
+		ver.Build.Major,
+		ver.Build.Major,
+		ver.Build.BuildNumber,
+		ver.Build.CommitHash)
+}
+
+func (r Requestor) GetNetworkCmd() tea.Cmd {
 	return func() tea.Msg {
+		ver, err := r.Client.Versions().Do(context.Background())
+		if err != nil {
+			return NetworkMsg{
+				Err: err,
+			}
+		}
+
+		var digest types.Digest
+		if len(ver.GenesisHash) != len(digest) {
+			return NetworkMsg{
+				Err: fmt.Errorf("unexpected genesis hash, wrong number of bytes"),
+			}
+		}
+		copy(digest[:], ver.GenesisHash)
+
 		return NetworkMsg{
-			GenesisID:   "test",
-			GenesisHash: [32]byte{},
+			GenesisID:   ver.GenesisID,
+			GenesisHash: digest,
+			NodeVersion: formatVersion(ver),
 		}
 	}
 }

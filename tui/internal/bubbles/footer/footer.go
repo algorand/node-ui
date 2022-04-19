@@ -40,9 +40,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
+
 	left := m.style.FooterLeft.Render("Algorand Node UI")
 	//right := m.style.FooterRight.Render(config.GetAlgorandVersion())
-	right := m.style.FooterRight.Render("TODO: Lookup Version")
+	right := m.style.FooterRight.Render(m.network.NodeVersion)
 	//middleText := fmt.Sprintf("%s (Gensis Hash %s)", m.network.GenesisID, m.network.GenesisHash)
 	middleText := fmt.Sprintf("%s", m.network.GenesisID)
 

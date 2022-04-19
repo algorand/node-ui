@@ -39,7 +39,7 @@ func New(style *style.Styles, requestor *messages.Requestor) Model {
 
 func (m Model) Init() tea.Cmd {
 	return tea.Batch(
-		messages.GetNetworkCmd(),
+		m.requestor.GetNetworkCmd(),
 		m.requestor.GetStatusCmd(),
 	)
 }
@@ -110,9 +110,9 @@ func (m Model) View() string {
 	// status
 	if (m.Status != models.NodeStatus{}) {
 		nextVersion := formatNextVersion(
-			string(m.Status.LastVersion),
-			string(m.Status.NextVersion),
-			uint64(m.Status.NextVersionRound))
+			m.Status.LastVersion,
+			m.Status.NextVersion,
+			m.Status.NextVersionRound)
 
 		switch {
 		case m.Status.Catchpoint != "":
