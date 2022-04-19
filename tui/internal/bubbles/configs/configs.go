@@ -61,7 +61,7 @@ func (m *Model) setSize(width, height int) {
 	m.viewport.Height = height - m.heightMargin - headerHeight - footerHeight
 }
 
-func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd

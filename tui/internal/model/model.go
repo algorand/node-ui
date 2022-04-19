@@ -37,11 +37,11 @@ type Model struct {
 	Accounts      tea.Model
 	Tabs          tabs.Model
 	BlockExplorer tea.Model
-	Configs       configs.Model
+	Configs       tea.Model
 	Utilities     tea.Model
 	About         tea.Model
 	Help          help.Model
-	Footer        footer.Model
+	Footer        tea.Model
 
 	network messages.NetworkMsg
 
