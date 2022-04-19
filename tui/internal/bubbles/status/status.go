@@ -44,7 +44,7 @@ func (m Model) Init() tea.Cmd {
 	)
 }
 
-func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case messages.StatusMsg:
 		if msg.Error != nil {

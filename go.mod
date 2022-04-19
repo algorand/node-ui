@@ -17,4 +17,7 @@ require (
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 	github.com/gliderlabs/ssh v0.3.3 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
+	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
+	github.com/spf13/cobra v1.4.0 // indirect
+	github.com/spf13/viper v1.4.0 // indirect
 )

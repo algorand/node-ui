@@ -1,12 +1,12 @@
 package model
 
 import (
-	"github.com/algorand/node-ui/messages"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/algorand/node-ui/messages"
 	"github.com/algorand/node-ui/tui/internal/constants"
 )
 
@@ -29,9 +29,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, constants.Keys.Quit):
 			return m, tea.Quit
 		case key.Matches(msg, constants.Keys.Catchup):
-			return m, messages.StartFastCatchup(networkFromID(m.Status.Network.GenesisID))
+			return m, messages.StartFastCatchup(networkFromID(m.network.GenesisID))
 		case key.Matches(msg, constants.Keys.AbortCatchup):
-			return m, messages.StopFastCatchup(networkFromID(m.Status.Network.GenesisID))
+			return m, messages.StopFastCatchup(networkFromID(m.network.GenesisID))
 		case key.Matches(msg, constants.Keys.Section):
 			m.active += 1
 			m.active %= 5

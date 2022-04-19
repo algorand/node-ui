@@ -16,23 +16,27 @@ import (
 	lm "github.com/charmbracelet/wish/logging"
 	"github.com/gliderlabs/ssh"
 
+	"github.com/algorand/go-algorand-sdk/types"
+
 	"github.com/algorand/node-ui/messages"
 	"github.com/algorand/node-ui/tui/internal/model"
 )
 
 const host = "0.0.0.0"
 
-func getTeaHandler(requestor *messages.Requestor) func(ssh.Session) (tea.Model, []tea.ProgramOption) {
+func getTeaHandler(model model.Model) func(ssh.Session) (tea.Model, []tea.ProgramOption) {
 	return func(_ ssh.Session) (tea.Model, []tea.ProgramOption) {
-		return model.New(requestor), []tea.ProgramOption{tea.WithAltScreen(), tea.WithMouseCellMotion()}
+		return model, []tea.ProgramOption{tea.WithAltScreen(), tea.WithMouseCellMotion()}
 	}
 }
 
 // Start ...
-func Start(port uint64, requestor *messages.Requestor) {
+func Start(port uint64, requestor *messages.Requestor, addresses []types.Address) {
+	model := model.New(requestor, addresses)
+
 	if port == 0 {
 		// Run directly
-		p := tea.NewProgram(model.New(requestor), tea.WithAltScreen(), tea.WithMouseCellMotion())
+		p := tea.NewProgram(model, tea.WithAltScreen(), tea.WithMouseCellMotion())
 		if err := p.Start(); err != nil {
 			fmt.Printf("Error in UI: %v", err)
 			os.Exit(1)
@@ -51,7 +55,7 @@ func Start(port uint64, requestor *messages.Requestor) {
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(path.Join(dirname, ".ssh/term_info_ed25519")),
 		wish.WithMiddleware(
-			bm.Middleware(getTeaHandler(requestor)),
+			bm.Middleware(getTeaHandler(model)),
 			lm.Middleware(),
 		),
 	)

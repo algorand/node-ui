@@ -3,12 +3,13 @@ package explorer
 import (
 	"context"
 
-	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 	table "github.com/calyptia/go-bubble-table"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
+	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
 
 	"github.com/algorand/node-ui/messages"
 	"github.com/algorand/node-ui/tui/internal/constants"
@@ -129,7 +130,7 @@ func (m *Model) SetSize(width, height int) {
 	m.txnView.Height = height - m.heightMargin - lipgloss.Height(m.headerView()) - lipgloss.Height(m.footerView())
 }
 
-func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var updateCmd tea.Cmd
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {

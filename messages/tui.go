@@ -87,36 +87,38 @@ func (r Requestor) GetStatusCmd() tea.Cmd {
 	}
 }
 
-type AccountStatusMsg map[types.Address]uint64
+type AccountStatusMsg struct {
+	Balances map[types.Address]map[uint64]uint64
+	Err      error
+}
 
-// TODO: Client instead of server
-func GetAccountStatusMsg() tea.Cmd {
+func (r Requestor) GetAccountStatusCmd(accounts []types.Address) tea.Cmd {
 	return func() tea.Msg {
-		/*
-			currentNode := GetNode(s)
-			ledger := currentNode.Ledger()
+		var rval AccountStatusMsg
+		rval.Balances = make(map[types.Address]map[uint64]uint64)
 
-			rval := make(AccountStatusMsg)
-
-			for _, a := range AddressList {
-				currentAddress, err := basics.UnmarshalChecksumAddress(a)
-
-				if err != nil {
-					continue
+		for _, acct := range accounts {
+			resp, err := r.Client.AccountInformation(acct.String()).Do(context.Background())
+			if err != nil {
+				return AccountStatusMsg{
+					Err: err,
 				}
-
-				record, _, _, err := ledger.LookupLatest(currentAddress)
-
-				rval[currentAddress] = record.MicroAlgos.Raw
 			}
+			rval.Balances[acct] = make(map[uint64]uint64)
 
-			return rval
-		*/
-		return nil
+			// algos at the special index
+			rval.Balances[acct][0] = resp.Amount
+
+			// everything else
+			for _, holding := range resp.Assets {
+				rval.Balances[acct][holding.AssetId] = holding.Amount
+			}
+		}
+
+		return rval
 	}
 }
 
-// TODO: Client instead of server
 func StartFastCatchup(network string) tea.Cmd {
 	return func() tea.Msg {
 		resp, err := http.Get(fmt.Sprintf("https://algorand-catchpoints.s3.us-east-2.amazonaws.com/channel/%s/latest.catchpoint", network))
@@ -150,18 +152,10 @@ func StartFastCatchup(network string) tea.Cmd {
 		}
 		defer resp.Body.Close()
 
-		/*
-			s, err := s.node.Status()
-			return StatusMsg{
-				Status: s,
-				Error:  err,
-			}
-		*/
 		return nil
 	}
 }
 
-// TODO: Client instead of server
 func StopFastCatchup(network string) tea.Cmd {
 	return func() tea.Msg {
 		resp, err := http.Get(fmt.Sprintf("https://algorand-catchpoints.s3.us-east-2.amazonaws.com/channel/%s/latest.catchpoint", network))

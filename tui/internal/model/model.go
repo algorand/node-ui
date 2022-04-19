@@ -1,10 +1,12 @@
 package model
 
 import (
-	"github.com/algorand/node-ui/messages"
 	"github.com/charmbracelet/bubbles/help"
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/algorand/go-algorand-sdk/types"
+
+	"github.com/algorand/node-ui/messages"
 	"github.com/algorand/node-ui/tui/internal/bubbles/about"
 	"github.com/algorand/node-ui/tui/internal/bubbles/accounts"
 	"github.com/algorand/node-ui/tui/internal/bubbles/configs"
@@ -31,10 +33,10 @@ const (
 )
 
 type Model struct {
-	Status        status.Model
-	Accounts      accounts.Model
+	Status        tea.Model
+	Accounts      tea.Model
 	Tabs          tabs.Model
-	BlockExplorer explorer.Model
+	BlockExplorer tea.Model
 	Configs       configs.Model
 	Utilities     tea.Model
 	About         tea.Model
@@ -52,7 +54,7 @@ type Model struct {
 	lastResize tea.WindowSizeMsg
 }
 
-func New(requestor *messages.Requestor) Model {
+func New(requestor *messages.Requestor, addresses []types.Address) Model {
 	styles := style.DefaultStyles()
 	tab := tabs.New([]string{"EXPLORER", "UTILITIES", "ACCOUNTS", "CONFIGURATION", "HELP"})
 	// The tab content is the only flexible element.
@@ -67,7 +69,7 @@ func New(requestor *messages.Requestor) Model {
 		Tabs:          tab,
 		BlockExplorer: explorer.NewModel(styles, requestor, initialWidth, 0, initialHeight, tabContentMargin),
 		Configs:       configs.New(tabContentMargin),
-		Accounts:      accounts.NewModel(styles, initialHeight, tabContentMargin),
+		Accounts:      accounts.NewModel(styles, requestor, initialHeight, tabContentMargin, addresses),
 		Help:          help.New(),
 		Footer:        footer.New(styles),
 		About:         about.New(tabContentMargin, about.GetHelpContent()),

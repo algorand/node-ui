@@ -36,60 +36,69 @@ type balance struct {
 }
 
 type account struct {
-	CurrentBalance balance
+	Balances       map[uint64]uint64
 	BalanceHistory []balance
 }
 
+func makeAccount() *account {
+	return &account{
+		Balances: make(map[uint64]uint64),
+		BalanceHistory: []balance{
+			{0, time.Now()},
+			{0, time.Now()},
+			{0, time.Now()},
+		}}
+}
+
 type Model struct {
+	accounts []types.Address
 	Accounts map[types.Address]*account
 
 	Err          error
 	style        *style.Styles
 	viewport     viewport.Model
 	heightMargin int
+
+	requestor *messages.Requestor
 }
 
-func NewModel(style *style.Styles, initialHeight int, heightMargin int) Model {
+func NewModel(style *style.Styles, requestor *messages.Requestor, initialHeight int, heightMargin int, accounts []types.Address) Model {
 	rval := Model{
 		Accounts:     make(map[types.Address]*account),
 		style:        style,
 		viewport:     viewport.New(0, 0),
 		heightMargin: heightMargin,
+		requestor:    requestor,
 	}
 	rval.setSize(80, initialHeight)
-
-	for _, a := range messages.AddressList {
-		currentAddress, err := types.DecodeAddress(a)
-
-		if err != nil {
-			continue
-		}
-
-		rval.Accounts[currentAddress] = &account{BalanceHistory: []balance{
-			{0, time.Now()},
-			{0, time.Now()},
-			{0, time.Now()},
-		}}
-
-	}
-
+	rval.SetAccounts(accounts)
 	return rval
 }
 
-func (m *Model) setSize(width, height int) {
+func (m *Model) SetAccounts(accounts []types.Address) {
+	updated := make(map[types.Address]*account)
+	for _, addr := range accounts {
+		if acct, ok := m.Accounts[addr]; ok {
+			updated[addr] = acct
+		} else {
+			updated[addr] = makeAccount()
+		}
+	}
+	m.Accounts = updated
+	m.accounts = accounts
+}
 
+func (m *Model) setSize(width, height int) {
 	footerHeight := lipgloss.Height(m.footerView())
 	m.viewport.Width = width
 	m.viewport.Height = height - m.heightMargin - footerHeight
 }
 
 func (m Model) Init() tea.Cmd {
-	return tea.Batch(
-		messages.GetAccountStatusMsg())
+	return m.requestor.GetAccountStatusCmd(m.accounts)
 }
 
-func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
-
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -101,32 +110,33 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 	case messages.AccountStatusMsg:
 		cmds = append(cmds,
-			tea.Tick(1*time.Second, func(time.Time) tea.Msg {
-				return messages.GetAccountStatusMsg()()
+			tea.Tick(5*time.Second, func(time.Time) tea.Msg {
+				return m.requestor.GetAccountStatusCmd(m.accounts)()
 			}),
 		)
 
-		for msgAddress, msgBalance := range msg {
+		for msgAddress, msgBalances := range msg.Balances {
+			acct := m.Accounts[msgAddress]
 
 			// Don't update if the balance didn't change
-			if msgBalance == m.Accounts[msgAddress].CurrentBalance.MicroAlgos {
+			if msgBalances[0] == acct.Balances[0] {
 				break
 			}
 
-			tmpList := m.Accounts[msgAddress].BalanceHistory
+			newBalance := balance{
+				MicroAlgos: msgBalances[0],
+				TimeStamp:  time.Now(),
+			}
 
 			// Prepend the balance
-			tmpList = append([]balance{m.Accounts[msgAddress].CurrentBalance}, tmpList...)
+			tmpList := append([]balance{newBalance}, acct.BalanceHistory...)
 			if len(tmpList) > 3 {
 				tmpList = tmpList[:3]
 			}
+			acct.BalanceHistory = tmpList
+			acct.Balances = msgBalances
 
-			m.Accounts[msgAddress].BalanceHistory = tmpList
-
-			m.Accounts[msgAddress].CurrentBalance = balance{
-				MicroAlgos: msgBalance,
-				TimeStamp:  time.Now(),
-			}
+			m.Accounts[msgAddress] = acct
 		}
 
 		m.viewport.SetContent(m.buildString())
@@ -159,7 +169,7 @@ func (m Model) buildString() string {
 		v := m.Accounts[accountType]
 		builder.WriteString(fmt.Sprintf("%s %s\n", m.style.AccountBoldText.Render("Account:"), m.style.AccountYellowText.Render(account)))
 
-		algoStr := fmt.Sprintf("         %f Algos", float64(v.CurrentBalance.MicroAlgos)/1000000.0)
+		algoStr := fmt.Sprintf("         %f Algos", float64(v.Balances[0])/1000000.0)
 		builder.WriteString(m.style.AccountBlueText.Render(algoStr) + "\n")
 		for _, a := range v.BalanceHistory {
 			if a.MicroAlgos == 0 {
@@ -175,11 +185,11 @@ func (m Model) buildString() string {
 	return m.style.Account.Render(builder.String())
 }
 func (m Model) footerView() string {
-
 	info := infoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
 	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(info)))
 	return lipgloss.JoinHorizontal(lipgloss.Center, line, info)
 }
+
 func max(a, b int) int {
 	if a > b {
 		return a

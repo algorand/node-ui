@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -9,26 +8,57 @@ import (
 	"strings"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
+	"github.com/algorand/go-algorand-sdk/types"
+	"github.com/spf13/cobra"
 
 	"github.com/algorand/node-ui/messages"
 	"github.com/algorand/node-ui/tui"
 )
 
-var uiPort uint64
-var url string
-var token string
-var algodDataDir string
+var command *cobra.Command
 
-// TODO "r" to set the refresh rate
-
-func init() {
-	flag.Uint64Var(&uiPort, "a", 0, "Port address to host TUI from, set to 0 to run directly")
-	flag.StringVar(&url, "u", "", "Algod URL and port formatted like localhost:1234")
-	flag.StringVar(&token, "t", "", "Algod REST API Token")
-	flag.StringVar(&algodDataDir, "d", "", "Path to algorand data directory, used to override ALGORAND_DATA environment variable")
+func main() {
+	err := command.Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Problem running command: %s\n", err.Error())
+	}
 }
 
-func getRequestorOrExit() *messages.Requestor {
+// TODO "r" to set the refresh rate
+type arguments struct {
+	tuiPort          uint64
+	algodURL         string
+	algodToken       string
+	algodDataDir     string
+	addressWatchList []string
+}
+
+func Run(args arguments) {
+	request := getRequestorOrExit(args.algodDataDir, args.algodURL, args.algodToken)
+	addresses := getAddressesOrExit(args.addressWatchList)
+	tui.Start(args.tuiPort, request, addresses)
+}
+
+func init() {
+	var args arguments
+
+	command = &cobra.Command{
+		Use:   "",
+		Short: "Launch terminal user interface",
+		Long:  "Node UI is a terminal user interface that displays information about a target algod instance.",
+		Run: func(_ *cobra.Command, _ []string) {
+			Run(args)
+		},
+	}
+
+	command.Flags().Uint64VarP(&args.tuiPort, "tui-port", "p", 0, "Port address to host TUI from, set to 0 to run directly.")
+	command.Flags().StringVarP(&args.algodURL, "algod-url", "u", "", "Algod URL and port to monitor, formatted like localhost:1234.")
+	command.Flags().StringVarP(&args.algodToken, "algod-token", "t", "", "Algod REST API token.")
+	command.Flags().StringVarP(&args.algodDataDir, "algod-data-dir", "d", "", "Path to Algorand data directory, when set it overrides the ALGORAND_DATA environment variable.")
+	command.Flags().StringArrayVarP(&args.addressWatchList, "watch-list", "w", nil, "Account addresses to watch in the accounts tab, may provide more than once to watch multiple accounts.")
+}
+
+func getRequestorOrExit(algodDataDir, url, token string) *messages.Requestor {
 	// Initialize from -d, ALGORAND_DATA, or provided URL/Token
 	if algodDataDir == "" {
 		algodDataDir = os.Getenv("ALGORAND_DATA")
@@ -80,7 +110,20 @@ func getRequestorOrExit() *messages.Requestor {
 	return messages.MakeRequestor(client, algodDataDir)
 }
 
-func main() {
-	flag.Parse()
-	tui.Start(uiPort, getRequestorOrExit())
+func getAddressesOrExit(addrs []string) (result []types.Address) {
+	failed := false
+	for _, addr := range addrs {
+		converted, err := types.DecodeAddress(addr)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to decode address '%s': %s\n", addr, err.Error())
+			failed = true
+		}
+		result = append(result, converted)
+	}
+
+	if failed {
+		os.Exit(1)
+	}
+
+	return result
 }
