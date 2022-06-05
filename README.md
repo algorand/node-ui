@@ -60,3 +60,10 @@ Each box on the screen is a "bubble", they manage state independently with an ev
 When displaying the UI, each bubble is asked to renders itself and they are finally joined together for final rendering using [lipgloss](https://github.com/charmbracelet/lipgloss). Web development aficionado may recognize this pattern as [The Elm Architecture](https://guide.elm-lang.org/architecture/).
 
 There are some quirks to this approach. The main one is that bubbletea is a rendering engine, NOT a window manager. This means that things like window heights and widths must be self-managed. Any mismanagement leads to very strange artifacts as the rendering engine tries to fit too many, or too few lines to a fixed sized terminal.
+
+# How to create a new release
+
+1. Create a tag: `git tag -a v_._._ -m "v_._._" && git push origin v_._._`
+2. Make sure the dist directory does not exist: `rm -rf dist`
+3. Export a GitHub token with `repo` scope: `export GITHUB_TOKEN=_`
+4. Install & run goreleaser: `goreleaser release`
