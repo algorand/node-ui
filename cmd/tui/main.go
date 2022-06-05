@@ -84,10 +84,9 @@ func getRequestorOrExit(algodDataDir, url, token string) *messages.Requestor {
 			fmt.Fprintf(os.Stderr, "Unable to read URL from file (%s): %s\n", netpath, err.Error())
 			os.Exit(1)
 		}
-		url = string(netaddrbytes)
-		netaddr := strings.TrimSpace(string(netaddrbytes))
-		if !strings.HasPrefix(netaddr, "http") {
-			netaddr = "http://" + netaddr
+		url = strings.TrimSpace(string(netaddrbytes))
+		if !strings.HasPrefix(url, "http") {
+			url = "http://" + url
 		}
 		tokenBytes, err := ioutil.ReadFile(tokenpath)
 		if err != nil {
