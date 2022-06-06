@@ -7,6 +7,8 @@ before:
     - go mod tidy
     # you may remove this if you don't need go generate
     - go generate ./...
+universal_binaries:
+  - replace: true
 builds:
   - main: cmd/tui/main.go
     env:
