@@ -14,6 +14,7 @@ func networkFromID(genesisID string) string {
 	return strings.Split(genesisID, "-")[0]
 }
 
+// Update is part of the tea.Model interface.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
@@ -33,7 +34,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, constants.Keys.AbortCatchup):
 			return m, messages.StopFastCatchup(networkFromID(m.network.GenesisID))
 		case key.Matches(msg, constants.Keys.Section):
-			m.active += 1
+			m.active++
 			m.active %= 5
 			m.Tabs.SetActiveIndex(int(m.active))
 			return m, nil

@@ -34,7 +34,7 @@ type arguments struct {
 	addressWatchList []string
 }
 
-func Run(args arguments) {
+func run(args arguments) {
 	request := getRequestorOrExit(args.algodDataDir, args.algodURL, args.algodToken)
 	addresses := getAddressesOrExit(args.addressWatchList)
 	tui.Start(args.tuiPort, request, addresses)
@@ -48,7 +48,7 @@ func init() {
 		Short: "Launch terminal user interface",
 		Long:  "Node UI is a terminal user interface that displays information about a target algod instance.",
 		Run: func(_ *cobra.Command, _ []string) {
-			Run(args)
+			run(args)
 		},
 	}
 

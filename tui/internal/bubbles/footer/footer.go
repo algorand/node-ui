@@ -10,6 +10,7 @@ import (
 	"github.com/algorand/node-ui/tui/internal/style"
 )
 
+// Model for the footer.
 type Model struct {
 	width  int
 	height int
@@ -18,14 +19,17 @@ type Model struct {
 	network messages.NetworkMsg
 }
 
+// New creates the footer Model.
 func New(s *style.Styles) Model {
 	return Model{style: s}
 }
 
+// Init is part of the tea.Model interface.
 func (m Model) Init() tea.Cmd {
 	return nil
 }
 
+// Update is part of the tea.Model interface.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -39,6 +43,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// View is part of the tea.Model interface.
 func (m Model) View() string {
 
 	left := m.style.FooterLeft.Render("Algorand Node UI")

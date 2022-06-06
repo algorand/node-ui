@@ -10,6 +10,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// Model represents the about bubble.
 type Model struct {
 	width        int
 	height       int
@@ -17,6 +18,7 @@ type Model struct {
 	viewport     viewport.Model
 }
 
+// New creates the about Model.
 func New(heightMargin int, content string) Model {
 	m := Model{
 		heightMargin: heightMargin,
@@ -34,10 +36,12 @@ func New(heightMargin int, content string) Model {
 	return m
 }
 
+// Init is part of the tea.Model interface.
 func (m Model) Init() tea.Cmd {
 	return nil
 }
 
+// Update is part of the tea.Model interface.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
@@ -54,6 +58,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+// View is part of the tea.Model interface.
 func (m Model) View() string {
 
 	builder := strings.Builder{}

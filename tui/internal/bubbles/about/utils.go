@@ -1,5 +1,6 @@
 package about
 
+// GetUtilsContent returns the utilities' markdown string.
 func GetUtilsContent() string {
 	return `## From this tab use the following keys to launch utility functions.
 

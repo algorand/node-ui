@@ -4,10 +4,11 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// XXX: For now, this is in its own package so that it can be shared between
+// For now, this is in its own package so that it can be shared between
 // different packages without incurring an illegal import cycle.
 
 const (
+	// TopHeight is the hard coded height of the top bubbles.
 	TopHeight = 13
 )
 
@@ -17,10 +18,10 @@ type Styles struct {
 	InactiveBorderColor lipgloss.Color
 
 	// Accounts area
-	Account lipgloss.Style
-	AccountBoldText lipgloss.Style
-	AccountGrayText lipgloss.Style
-	AccountBlueText lipgloss.Style
+	Account           lipgloss.Style
+	AccountBoldText   lipgloss.Style
+	AccountGrayText   lipgloss.Style
+	AccountBlueText   lipgloss.Style
 	AccountYellowText lipgloss.Style
 
 	// Status area

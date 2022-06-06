@@ -39,7 +39,7 @@ func computeTxnRow(b transactionItem) string {
 		sigtype = "inner-txn"
 	}
 
-	return fmt.Sprintf("\t%s\t%s\t%s\t%d\t%t\t%s",
+	return fmt.Sprintf("\t%s\t%s\t%s\t%f\t%t\t%s",
 		b.Txn.Type,
 		formatAmount(b.SignedTxnInBlock),
 		sigtype,
@@ -83,6 +83,6 @@ func (m *Model) initTransactions() {
 	t.KeyMap.Down.SetKeys(append(t.KeyMap.Down.Keys(), "j")...)
 	t.Styles.Title = m.style.StatusBoldText
 	m.table = t
-	m.SetSize(m.width, m.height)
+	m.setSize(m.width, m.height)
 	m.updateTxnTable()
 }

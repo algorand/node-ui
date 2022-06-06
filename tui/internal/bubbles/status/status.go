@@ -16,6 +16,7 @@ import (
 	"github.com/algorand/node-ui/tui/internal/style"
 )
 
+// Model representing the status.
 type Model struct {
 	Status  models.NodeStatus
 	Network messages.NetworkMsg
@@ -29,6 +30,7 @@ type Model struct {
 	acquiredBlksPct   float64
 }
 
+// New creates a status Model.
 func New(style *style.Styles, requestor *messages.Requestor) Model {
 	return Model{
 		style:     style,
@@ -37,6 +39,7 @@ func New(style *style.Styles, requestor *messages.Requestor) Model {
 	}
 }
 
+// Init is part of the tea.Model interface.
 func (m Model) Init() tea.Cmd {
 	return tea.Batch(
 		m.requestor.GetNetworkCmd(),
@@ -44,6 +47,7 @@ func (m Model) Init() tea.Cmd {
 	)
 }
 
+// Update is part of the tea.Model interface.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case messages.StatusMsg:
@@ -98,6 +102,7 @@ func writeProgress(b *strings.Builder, prefix string, progress progress.Model, p
 	b.WriteString("\n")
 }
 
+// View is part of the tea.Model interface.
 func (m Model) View() string {
 	bold := m.style.StatusBoldText
 	key := m.style.BottomListItemKey.Copy().MarginLeft(0)

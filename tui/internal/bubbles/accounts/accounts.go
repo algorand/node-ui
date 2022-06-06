@@ -50,6 +50,7 @@ func makeAccount() *account {
 		}}
 }
 
+// Model representing the account bubble.
 type Model struct {
 	accounts []types.Address
 	Accounts map[types.Address]*account
@@ -62,7 +63,8 @@ type Model struct {
 	requestor *messages.Requestor
 }
 
-func NewModel(style *style.Styles, requestor *messages.Requestor, initialHeight int, heightMargin int, accounts []types.Address) Model {
+// New creates the accounts Model.
+func New(style *style.Styles, requestor *messages.Requestor, initialHeight int, heightMargin int, accounts []types.Address) Model {
 	rval := Model{
 		Accounts:     make(map[types.Address]*account),
 		style:        style,
@@ -75,6 +77,7 @@ func NewModel(style *style.Styles, requestor *messages.Requestor, initialHeight 
 	return rval
 }
 
+// SetAccounts updates the accounts to monitor.
 func (m *Model) SetAccounts(accounts []types.Address) {
 	updated := make(map[types.Address]*account)
 	for _, addr := range accounts {
@@ -94,10 +97,12 @@ func (m *Model) setSize(width, height int) {
 	m.viewport.Height = height - m.heightMargin - footerHeight
 }
 
+// Init is part of the tea.Model interface.
 func (m Model) Init() tea.Cmd {
 	return m.requestor.GetAccountStatusCmd(m.accounts)
 }
 
+// Update is part of the tea.Model interface.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
@@ -148,6 +153,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+// View is part of the tea.Model interface.
 func (m Model) View() string {
 
 	builder := strings.Builder{}

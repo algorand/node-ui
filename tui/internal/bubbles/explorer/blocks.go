@@ -116,6 +116,7 @@ func computeBlockRow(b blockItem) string {
 		proposer(b.Block.Cert))
 }
 
+// Render implements the Row interface to display a row of data.
 func (i blockItem) Render(w io.Writer, model table.Model, index int) {
 	var cursor string
 	if index == model.Cursor() {
@@ -155,11 +156,12 @@ func (m *Model) initBlocks() {
 	t.KeyMap.Down.SetKeys(append(t.KeyMap.Down.Keys(), "j")...)
 	t.Styles.Title = m.style.StatusBoldText
 	m.table = t
-	m.SetSize(m.width, m.height)
+	m.setSize(m.width, m.height)
 	m.updateBlockTable()
 }
 
-func (m Model) UpdateBlocks(msg tea.Msg) (Model, tea.Cmd) {
+// updateBlocks mimics the tea.Model update function.
+func (m Model) updateBlocks(msg tea.Msg) (Model, tea.Cmd) {
 	switch msg.(type) {
 	case BlocksMsg:
 		if m.state == blockState {

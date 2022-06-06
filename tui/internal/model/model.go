@@ -32,6 +32,7 @@ const (
 	helpTab
 )
 
+// Model represents the top level of the TUI.
 type Model struct {
 	Status        tea.Model
 	Accounts      tea.Model
@@ -54,6 +55,7 @@ type Model struct {
 	lastResize tea.WindowSizeMsg
 }
 
+// New initializes the TUI.
 func New(requestor *messages.Requestor, addresses []types.Address) Model {
 	styles := style.DefaultStyles()
 	tab := tabs.New([]string{"EXPLORER", "UTILITIES", "ACCOUNTS", "CONFIGURATION", "HELP"})
@@ -68,9 +70,9 @@ func New(requestor *messages.Requestor, addresses []types.Address) Model {
 		styles:        styles,
 		Status:        status.New(styles, requestor),
 		Tabs:          tab,
-		BlockExplorer: explorer.NewModel(styles, requestor, initialWidth, 0, initialHeight, tabContentMargin),
+		BlockExplorer: explorer.New(styles, requestor, initialWidth, 0, initialHeight, tabContentMargin),
 		Configs:       configs.New(tabContentMargin),
-		Accounts:      accounts.NewModel(styles, requestor, initialHeight, tabContentMargin, addresses),
+		Accounts:      accounts.New(styles, requestor, initialHeight, tabContentMargin, addresses),
 		Help:          help.New(),
 		Footer:        footer.New(styles),
 		About:         about.New(tabContentMargin, about.GetHelpContent()),

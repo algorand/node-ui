@@ -29,6 +29,7 @@ const initialBlocks = 25
 type blocks []blockItem
 type txnItems []transactionItem
 
+// Model for the block explorer bubble.
 type Model struct {
 	state state
 
@@ -53,7 +54,8 @@ type Model struct {
 	requestor *messages.Requestor
 }
 
-func NewModel(styles *style.Styles, requestor *messages.Requestor, width, widthMargin, height, heightMargin int) Model {
+// New constructs the explorer Model.
+func New(styles *style.Styles, requestor *messages.Requestor, width, widthMargin, height, heightMargin int) Model {
 	m := Model{
 		state:        blockState,
 		style:        styles,
@@ -67,12 +69,14 @@ func NewModel(styles *style.Styles, requestor *messages.Requestor, width, widthM
 	return m
 }
 
+// BlocksMsg contains new block information.
 type BlocksMsg struct {
 	blocks []blockItem
 	err    error
 }
 
-func (m Model) InitBlocks() tea.Msg {
+// initBlocksCmd is the initializer command.
+func (m Model) initBlocksCmd() tea.Msg {
 	status, err := m.requestor.Client.Status().Do(context.Background())
 	if err != nil {
 		return BlocksMsg{
@@ -99,8 +103,9 @@ func (m *Model) getBlocks(first, last uint64) tea.Cmd {
 	}
 }
 
+// Init is part of the tea.Model interface.
 func (m Model) Init() tea.Cmd {
-	return m.InitBlocks
+	return m.initBlocksCmd
 }
 
 func (m Model) nextBlockCmd(round uint64) tea.Cmd {
@@ -121,7 +126,7 @@ func (m Model) nextBlockCmd(round uint64) tea.Cmd {
 	}
 }
 
-func (m *Model) SetSize(width, height int) {
+func (m *Model) setSize(width, height int) {
 	m.width = width
 	m.height = height
 	verticalFrameSize := m.style.Bottom.GetVerticalFrameSize()
@@ -130,6 +135,7 @@ func (m *Model) SetSize(width, height int) {
 	m.txnView.Height = height - m.heightMargin - lipgloss.Height(m.headerView()) - lipgloss.Height(m.footerView())
 }
 
+// Update is part of the tea.Model interface.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var updateCmd tea.Cmd
 	var cmds []tea.Cmd
@@ -171,7 +177,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.WindowSizeMsg:
-		m.SetSize(msg.Width, msg.Height)
+		m.setSize(msg.Width, msg.Height)
 
 	case BlocksMsg:
 		// append blocks
@@ -189,7 +195,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch m.state {
 	case blockState:
-		m, updateCmd = m.UpdateBlocks(msg)
+		m, updateCmd = m.updateBlocks(msg)
 		return m, tea.Batch(append(cmds, updateCmd)...)
 	case paysetState:
 		return m, nil
@@ -201,6 +207,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// View is part of the tea.Model interface.
 func (m Model) View() string {
 	switch m.state {
 	case blockState, paysetState:

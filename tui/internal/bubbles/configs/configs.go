@@ -27,11 +27,13 @@ var (
 	}()
 )
 
+// Model representing the configs page.
 type Model struct {
 	heightMargin int
 	viewport     viewport.Model
 }
 
+// New creates a Model.
 func New(heightMargin int) Model {
 	m := Model{
 		viewport:     viewport.New(0, 0),
@@ -41,6 +43,7 @@ func New(heightMargin int) Model {
 	return m
 }
 
+// ConfigContent allows the update function to find its config content.
 type ConfigContent string
 
 func (m Model) getContent() tea.Cmd {
@@ -49,6 +52,7 @@ func (m Model) getContent() tea.Cmd {
 	}
 }
 
+// Init is part of the tea.Model interface.
 func (m Model) Init() tea.Cmd {
 	return m.getContent()
 }
@@ -61,6 +65,7 @@ func (m *Model) setSize(width, height int) {
 	m.viewport.Height = height - m.heightMargin - headerHeight - footerHeight
 }
 
+// Update is part of the tea.Model interface.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
@@ -84,6 +89,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+// View is part of the tea.Model interface.
 func (m Model) View() string {
 
 	builder := strings.Builder{}

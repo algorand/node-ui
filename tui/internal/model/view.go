@@ -25,6 +25,7 @@ func (m Model) tabView() string {
 	return "unknown tab"
 }
 
+// View is part of the tea.Model interface.
 func art() string {
 	// TODO: This could take a width and indent/border to line up with the bottom
 	art := `
@@ -43,13 +44,13 @@ func art() string {
 	return indent.String(art, 3)
 }
 
+// View is part of the tea.Model interface.
 func (m Model) View() string {
 	// Compose the different views by joining them together in the right orientation.
 	return lipgloss.JoinVertical(0,
 		lipgloss.JoinHorizontal(0,
 			m.Status.View(),
 			art()),
-		//m.Accounts.View()),
 		m.Tabs.View(),
 		m.tabView(),
 		m.Help.View(constants.Keys),

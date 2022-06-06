@@ -7,10 +7,6 @@ import (
 )
 
 var (
-	//activeStyle = lipgloss.NewStyle().
-	//		Background(lipgloss.Color("#527772")).
-	//		Foreground(lipgloss.Color("#6dd588"))
-	//inactiveStyle = lipgloss.NewStyle()
 	activeColorForeground = lipgloss.Color("#6dd588")
 	activeColorBackground = lipgloss.Color("#527772")
 
@@ -50,53 +46,49 @@ var (
 		BorderTop(false).
 		BorderLeft(false).
 		BorderRight(false)
-
-	//docStyle = lipgloss.NewStyle().Padding(1, 2, 1, 2)
 )
 
+// Model representing the tabs bubble.
 type Model struct {
 	width int
 
 	index int
 	tabs  []string
 
-	//tabWidth int
-
 	ActiveStyle   lipgloss.Style
 	InactiveStyle lipgloss.Style
 }
 
+// New creates a tabs Model.
+// TODO: pass in initial width.
 func New(tabs []string) Model {
-	//max := 0
-	//for _, t := range tabs {
-	//	if len(t) > max {
-	//		max = len(t)
-	//	}
-	//}
 	return Model{
 		width: 80,
 		tabs:  tabs,
-		//tabWidth:      max,
-		//ActiveStyle:   activeStyle,
-		//InactiveStyle: inactiveStyle,
 	}
 }
 
+// Height returns the height of this bubble.
 func (m Model) Height() int {
 	return 3
 }
+
+// SetActiveIndex sets the current active index.
 func (m *Model) SetActiveIndex(i int) {
 	m.index = i
 }
 
+// GetActiveIndex returns the current active index.
 func (m Model) GetActiveIndex() int {
 	return m.index
 }
 
+// Init is part of the tea.Model interface.
 func (m Model) Init() tea.Cmd {
 	return nil
 }
 
+// Update is part of the tea.Model interface.
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -113,6 +105,7 @@ func max(a, b int) int {
 	return b
 }
 
+// View is part of the tea.Model interface.
 func (m Model) View() string {
 	doc := strings.Builder{}
 

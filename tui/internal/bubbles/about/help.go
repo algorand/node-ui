@@ -1,5 +1,6 @@
 package about
 
+// GetHelpContent returns the help page markdown string.
 func GetHelpContent() string {
 	return `
 # Algorand Node UI :smiley_cat:

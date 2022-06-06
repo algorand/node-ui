@@ -2,6 +2,7 @@ package constants
 
 import "github.com/charmbracelet/bubbles/key"
 
+// KeyMap contains references to all the key bindings.
 type KeyMap struct {
 	Generic      key.Binding
 	Quit         key.Binding
@@ -13,14 +14,17 @@ type KeyMap struct {
 	Help         key.Binding
 }
 
+// ShortHelp implements the KeyMap interface.
 func (k KeyMap) ShortHelp() []key.Binding {
 	return []key.Binding{k.Section, k.Forward, k.Back, k.Generic, k.Quit, k.Help}
 }
 
+// FullHelp implements the KeyMap interface.
 func (k KeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{k.ShortHelp()}
 }
 
+// Keys is a global for accessing the KeyMap.
 var Keys = KeyMap{
 	// Not sure how to group help together.
 	Generic: key.NewBinding(

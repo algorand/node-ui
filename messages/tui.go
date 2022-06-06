@@ -32,23 +32,13 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-var (
-	AddressList = []string{
-		"ZONEGRWBV3Q7JA6RHAN4EMAX6ICIVZX2C6U65DCNHYLIL4PUBB7O6DOSBI",
-		"XFYAYSEGQIY2J3DCGGXCPXY5FGHSVKM3V4WCNYCLKDLHB7RYDBU233QB5M",
-		"WNEJFT6HTAX3CQ6YOPIY65AKYCBQM6BLV4S5OP54VH76OP33LOL2MYGSIM",
-		"GULDQIEZ2CUPBSHKXRWUW7X3LCYL44AI5GGSHHOQDGKJAZ2OANZJ43S72U",
-		"57QZ4S7YHTWPRAM3DQ2MLNSVLAQB7DTK4D7SUNRIEFMRGOU7DMYFGF55BY",
-		"ETGSQKACKC56JWGMDAEP5S2JVQWRKTQUVKCZTMPNUGZLDVCWPY63LSI3H4",
-		"J4AEINCSSLDA7LNBNWM4ZXFCTLTOZT5LG3F5BLMFPJYGFWVCMU37EZI2AM",
-	}
-)
-
+// Requestor provides an opaque pointer for an algod client.
 type Requestor struct {
 	Client  *algod.Client
 	dataDir string
 }
 
+// MakeRequestor builds the requestor object.
 func MakeRequestor(client *algod.Client, dataDir string) *Requestor {
 	return &Requestor{
 		Client:  client,
@@ -56,6 +46,7 @@ func MakeRequestor(client *algod.Client, dataDir string) *Requestor {
 	}
 }
 
+// NetworkMsg holds network information.
 type NetworkMsg struct {
 	GenesisID   string
 	GenesisHash types.Digest
@@ -72,6 +63,7 @@ func formatVersion(ver models.Version) string {
 		ver.Build.CommitHash)
 }
 
+// GetNetworkCmd provides a tea.Cmd for fetching a NetworkMsg.
 func (r Requestor) GetNetworkCmd() tea.Cmd {
 	return func() tea.Msg {
 		ver, err := r.Client.Versions().Do(context.Background())
@@ -97,11 +89,13 @@ func (r Requestor) GetNetworkCmd() tea.Cmd {
 	}
 }
 
+// StatusMsg has node status information.
 type StatusMsg struct {
 	Status models.NodeStatus
 	Error  error
 }
 
+// GetStatusCmd provides a tea.Cmd for fetching a StatusMsg.
 func (r Requestor) GetStatusCmd() tea.Cmd {
 	return func() tea.Msg {
 		resp, err := r.Client.Status().Do(context.Background())
@@ -113,11 +107,13 @@ func (r Requestor) GetStatusCmd() tea.Cmd {
 	}
 }
 
+// AccountStatusMsg has account balance information.
 type AccountStatusMsg struct {
 	Balances map[types.Address]map[uint64]uint64
 	Err      error
 }
 
+// GetAccountStatusCmd provides a tea.Cmd for fetching a AccountStatusMsg.
 func (r Requestor) GetAccountStatusCmd(accounts []types.Address) tea.Cmd {
 	return func() tea.Msg {
 		var rval AccountStatusMsg
@@ -145,6 +141,7 @@ func (r Requestor) GetAccountStatusCmd(accounts []types.Address) tea.Cmd {
 	}
 }
 
+// StartFastCatchup attempts to start fast catchup for a given network.
 func StartFastCatchup(network string) tea.Cmd {
 	return func() tea.Msg {
 		resp, err := http.Get(fmt.Sprintf("https://algorand-catchpoints.s3.us-east-2.amazonaws.com/channel/%s/latest.catchpoint", network))
@@ -182,6 +179,7 @@ func StartFastCatchup(network string) tea.Cmd {
 	}
 }
 
+// StopFastCatchup attempts to stop fast catchup for a given network.
 func StopFastCatchup(network string) tea.Cmd {
 	return func() tea.Msg {
 		resp, err := http.Get(fmt.Sprintf("https://algorand-catchpoints.s3.us-east-2.amazonaws.com/channel/%s/latest.catchpoint", network))
@@ -219,6 +217,7 @@ func StopFastCatchup(network string) tea.Cmd {
 	}
 }
 
+// GetConfigs returns the node config.json file if possible.
 func GetConfigs() string {
 	// TODO: Optional
 	configs, err := os.ReadFile(path.Join(os.Getenv("ALGORAND_DATA"), "config.json"))
