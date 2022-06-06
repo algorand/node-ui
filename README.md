@@ -61,6 +61,10 @@ When displaying the UI, each bubble is asked to renders itself and they are fina
 
 There are some quirks to this approach. The main one is that bubbletea is a rendering engine, NOT a window manager. This means that things like window heights and widths must be self-managed. Any mismanagement leads to very strange artifacts as the rendering engine tries to fit too many, or too few lines to a fixed sized terminal.
 
+# Contributing
+
+Contributions are welcome! There are no plans to actively maintain this project, so if you find it useful please consider helping out.
+
 # How to create a new release
 
 1. Create a tag: `git tag -a v_._._ -m "v_._._" && git push origin v_._._`

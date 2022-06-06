@@ -142,8 +142,9 @@ func (m Model) View() string {
 			height -= 7
 		default:
 			builder.WriteString(fmt.Sprintf("Current round:   %s\n", key.Render(strconv.FormatUint(m.Status.LastRound, 10))))
-			builder.WriteString(fmt.Sprintf("Block wait time: %s\n", time.Nanosecond*time.Duration(m.Status.TimeSinceLastRound)))
-			builder.WriteString(fmt.Sprintf("Sync time:       %s\n", time.Second*time.Duration(m.Status.CatchupTime)))
+			roundTo := time.Second / 10
+			builder.WriteString(fmt.Sprintf("Block wait time: %s\n", time.Duration(m.Status.TimeSinceLastRound).Round(roundTo)))
+			builder.WriteString(fmt.Sprintf("Sync time:       %s\n", time.Duration(m.Status.CatchupTime).Round(roundTo)))
 			height -= 3
 			// TODO: Display consensus upgrade progress
 			if m.Status.LastVersion == m.Status.NextVersion {
