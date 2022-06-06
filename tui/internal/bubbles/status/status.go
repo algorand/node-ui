@@ -149,14 +149,14 @@ func (m Model) View() string {
 			// TODO: Display consensus upgrade progress
 			if m.Status.LastVersion == m.Status.NextVersion {
 				// no upgrade in progress
-				builder.WriteString(fmt.Sprintf("Protocol:        %s\n", formatVersion(string(m.Status.LastVersion))))
+				builder.WriteString(fmt.Sprintf("Protocol:        %s\n", formatVersion(m.Status.LastVersion)))
 				builder.WriteString(fmt.Sprintf("                 %s\n", bold.Render("No upgrade in progress.")))
 				height -= 2
 			} else {
 				// upgrade in progress
 				builder.WriteString(fmt.Sprintf("%s\n", bold.Render("Consensus Upgrade Pending")))
-				builder.WriteString(fmt.Sprintf("Current Protocol: %s\n", formatVersion(string(m.Status.LastVersion))))
-				builder.WriteString(fmt.Sprintf("Next Protocol:    %s\n", formatVersion(string(m.Status.NextVersion))))
+				builder.WriteString(fmt.Sprintf("Current Protocol: %s\n", formatVersion(m.Status.LastVersion)))
+				builder.WriteString(fmt.Sprintf("Next Protocol:    %s\n", formatVersion(m.Status.NextVersion)))
 				builder.WriteString(fmt.Sprintf("Upgrade round:    %s\n", nextVersion))
 				height -= 4
 			}

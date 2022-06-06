@@ -10,8 +10,6 @@ var (
 	activeColorForeground = lipgloss.Color("#6dd588")
 	activeColorBackground = lipgloss.Color("#527772")
 
-	defaultWidth = 20
-
 	activeTabBorder = lipgloss.Border{
 		Top:         "─",
 		Bottom:      " ",

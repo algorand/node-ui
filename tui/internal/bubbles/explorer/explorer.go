@@ -45,10 +45,6 @@ type Model struct {
 	// cache for transactions page
 	transactions txnItems
 
-	// cache for txn page
-	//txn transactions.SignedTxnInBlock
-	txn []blocks
-
 	table     table.Model
 	txnView   viewport.Model
 	requestor *messages.Requestor
@@ -96,7 +92,11 @@ func (m *Model) getBlocks(first, last uint64) tea.Cmd {
 				return result
 			}
 			item := blockItem{Round: i}
-			msgpack.Decode(block, &item.Block)
+			err = msgpack.Decode(block, &item.Block)
+			if err != nil {
+				result.err = err
+				return result
+			}
 			result.blocks = append(result.blocks, item)
 		}
 		return result
@@ -119,7 +119,12 @@ func (m Model) nextBlockCmd(round uint64) tea.Cmd {
 			return BlocksMsg{err: err}
 		}
 		item := blockItem{Round: round}
-		msgpack.Decode(blk, &item.Block)
+		err = msgpack.Decode(blk, &item.Block)
+		if err != nil {
+			return BlocksMsg{
+				err: err,
+			}
+		}
 		return BlocksMsg{
 			blocks: []blockItem{item},
 		}
@@ -135,7 +140,7 @@ func (m *Model) setSize(width, height int) {
 	m.txnView.Height = height - m.heightMargin - lipgloss.Height(m.headerView()) - lipgloss.Height(m.footerView())
 }
 
-// Update is part of the tea.Model interface.
+// aUpdate is part of the tea.Model interface.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var updateCmd tea.Cmd
 	var cmds []tea.Cmd
@@ -183,9 +188,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// append blocks
 		backup := m.blocks
 		m.blocks = msg.blocks
-		for _, blk := range backup {
-			m.blocks = append(m.blocks, blk)
-		}
+		m.blocks = append(m.blocks, backup...)
 		cmds = append(cmds, m.nextBlockCmd(m.blocks[0].Round+1))
 	}
 

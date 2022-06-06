@@ -179,7 +179,7 @@ func (m Model) buildString() string {
 		builder.WriteString(m.style.AccountBlueText.Render(algoStr) + "\n")
 		for _, a := range v.BalanceHistory {
 			if a.MicroAlgos == 0 {
-				builder.WriteString(fmt.Sprintf("\n"))
+				builder.WriteString("\n")
 			} else {
 				pastStr := fmt.Sprintf("         %f Algos @ %s\n", float64(a.MicroAlgos)/1000000, a.TimeStamp.Format("2006-01-02 15:04:05.1234"))
 				builder.WriteString(pastStr)

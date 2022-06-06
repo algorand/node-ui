@@ -1,7 +1,6 @@
 package footer
 
 import (
-	"fmt"
 	"github.com/algorand/node-ui/messages"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -50,7 +49,7 @@ func (m Model) View() string {
 	//right := m.style.FooterRight.Render(config.GetAlgorandVersion())
 	right := m.style.FooterRight.Render(m.network.NodeVersion)
 	//middleText := fmt.Sprintf("%s (Gensis Hash %s)", m.network.GenesisID, m.network.GenesisHash)
-	middleText := fmt.Sprintf("%s", m.network.GenesisID)
+	middleText := m.network.GenesisID
 
 	middle := m.style.FooterMiddle.Copy().
 		Width(m.width - lipgloss.Width(left) - lipgloss.Width(right)).

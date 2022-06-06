@@ -1,19 +1,14 @@
 package about
 
 import (
-	"fmt"
-	"github.com/charmbracelet/glamour"
-	"github.com/muesli/reflow/indent"
-	"strings"
-
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
+	"github.com/muesli/reflow/indent"
 )
 
 // Model represents the about bubble.
 type Model struct {
-	width        int
-	height       int
 	heightMargin int
 	viewport     viewport.Model
 }
@@ -60,11 +55,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View is part of the tea.Model interface.
 func (m Model) View() string {
-
-	builder := strings.Builder{}
-
-	builder.WriteString(fmt.Sprintf("%s", m.viewport.View()))
-	return builder.String()
+	return m.viewport.View()
 }
 
 func (m *Model) setSize(width, height int) {

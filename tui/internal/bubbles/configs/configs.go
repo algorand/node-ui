@@ -11,8 +11,6 @@ import (
 	"github.com/algorand/node-ui/messages"
 )
 
-const useHighPerformanceRenderer = false
-
 var (
 	titleStyle = func() lipgloss.Style {
 		b := lipgloss.RoundedBorder()
