@@ -3,7 +3,7 @@ module github.com/algorand/node-ui
 go 1.16
 
 require (
-	github.com/algorand/go-algorand-sdk v1.14.1
+	github.com/algorand/go-algorand-sdk v1.16.0
 	github.com/calyptia/go-bubble-table v0.1.0
 	github.com/charmbracelet/bubbles v0.10.3
 	github.com/charmbracelet/bubbletea v0.20.0

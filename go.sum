@@ -6,8 +6,8 @@ github.com/alecthomas/chroma v0.10.0 h1:7XDcGkCQopCNKjZHfYrNLraA+M7e0fMiJ/Mfikbf
 github.com/alecthomas/chroma v0.10.0/go.mod h1:jtJATyUxlIORhUOFNA9NZDWGAQ8wpxQQqNSB4rjA/1s=
 github.com/algorand/falcon v0.0.0-20220130164023-c9e1d466f123/go.mod h1:OkQyHlGvS0kLNcIWbC21/uQcnbfwSOQm+wiqWwBG9pQ=
 github.com/algorand/go-algorand v0.0.0-20220323144801-17c0feef002f/go.mod h1:ehGHRKxrRgN0fF+vm6kHLykiQ1ana3qc52N5UQzkFPM=
-github.com/algorand/go-algorand-sdk v1.14.1 h1:ZS3qfqK4gGZw5vsT6P2eeMHCLTr1s3AnqWFxhdmxEKM=
-github.com/algorand/go-algorand-sdk v1.14.1/go.mod h1:IM0k8f3UnqGoxZ0U560r3SwORHtvCT2gQfvgMOEm0rg=
+github.com/algorand/go-algorand-sdk v1.16.0 h1:3i3Bq4QNVwzu/Kbqf7p+0F/YDtLhlc2qP3+zn4wSzY4=
+github.com/algorand/go-algorand-sdk v1.16.0/go.mod h1:Kx2pxVS7ViANRZl0fhWjR6LqCs7r3b5cAb12qc7hju0=
 github.com/algorand/go-codec v1.1.8 h1:XDSreeeZY8gMst6Edz4RBkl08/DGMJOeHYkoXL2B7wI=
 github.com/algorand/go-codec v1.1.8/go.mod h1:XhzVs6VVyWMLu6cApb9/192gBjGRVGm5cX5j203Heg4=
 github.com/algorand/go-codec/codec v1.1.8 h1:lsFuhcOH2LiEhpBH3BVUUkdevVmwCRyvb7FCAAPeY6U=

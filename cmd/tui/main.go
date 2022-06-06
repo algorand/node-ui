@@ -61,17 +61,23 @@ func init() {
 
 func getRequestorOrExit(algodDataDir, url, token string) *messages.Requestor {
 	// Initialize from -d, ALGORAND_DATA, or provided URL/Token
-	if algodDataDir == "" {
-		algodDataDir = os.Getenv("ALGORAND_DATA")
-		if algodDataDir != "" {
-			fmt.Println("Using ALGORAND_DATA environment variable.")
-		}
+
+	if algodDataDir != "" && (url != "" || token != "") {
+			fmt.Fprintln(os.Stderr, "Do not use -u/-t with -d.")
+			os.Exit(1)
 	}
 
-	// Lookup URL/Token
-	if algodDataDir != "" {
-		if url != "" || token != "" {
-			fmt.Fprintln(os.Stderr, "Do not use -u/-t with -d or the ALGORAND_DATA environment variable.")
+	// If url/token are missing, attempt to use environment variable.
+	if url == "" && token == "" {
+		if algodDataDir == "" {
+			algodDataDir = os.Getenv("ALGORAND_DATA")
+			if algodDataDir != "" {
+				fmt.Println("Using ALGORAND_DATA environment variable.")
+			}
+		}
+
+		if algodDataDir == "" {
+			fmt.Fprintln(os.Stderr, "Algod is not available.\nMust provide url and token with -u/-t or a data directory with -d or the ALGORAND_DATA environment variable.")
 			os.Exit(1)
 		}
 
@@ -85,15 +91,16 @@ func getRequestorOrExit(algodDataDir, url, token string) *messages.Requestor {
 			os.Exit(1)
 		}
 		url = strings.TrimSpace(string(netaddrbytes))
-		if !strings.HasPrefix(url, "http") {
-			url = "http://" + url
-		}
 		tokenBytes, err := ioutil.ReadFile(tokenpath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to read Token from file (%s): %s\n", tokenpath, err.Error())
 			os.Exit(1)
 		}
 		token = string(tokenBytes)
+	}
+
+	if !strings.HasPrefix(url, "http") {
+		url = "http://" + url
 	}
 
 	if url == "" || token == "" {

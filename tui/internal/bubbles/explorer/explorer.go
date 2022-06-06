@@ -1,8 +1,8 @@
 package explorer
 
 import (
+	"bytes"
 	"context"
-
 	table "github.com/calyptia/go-bubble-table"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -108,6 +108,10 @@ func (m Model) Init() tea.Cmd {
 	return m.initBlocksCmd
 }
 
+func lenientDecode(data []byte, objptr interface{}) error {
+	return msgpack.NewLenientDecoder(bytes.NewReader(data)).Decode(&objptr)
+}
+
 func (m Model) nextBlockCmd(round uint64) tea.Cmd {
 	return func() tea.Msg {
 		_, err := m.requestor.Client.StatusAfterBlock(round).Do(context.Background())
@@ -119,7 +123,12 @@ func (m Model) nextBlockCmd(round uint64) tea.Cmd {
 			return BlocksMsg{err: err}
 		}
 		item := blockItem{Round: round}
-		err = msgpack.Decode(blk, &item.Block)
+		//err = msgpack.Decode(blk, &item.Block)
+		err = lenientDecode(blk, &item.Block)
+		if err != nil {
+			return err
+		}
+
 		if err != nil {
 			return BlocksMsg{
 				err: err,
@@ -189,7 +198,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		backup := m.blocks
 		m.blocks = msg.blocks
 		m.blocks = append(m.blocks, backup...)
-		cmds = append(cmds, m.nextBlockCmd(m.blocks[0].Round+1))
+		next := uint64(0)
+		if len(m.blocks) > 0 {
+			next = m.blocks[0].Round + 1
+		}
+		cmds = append(cmds, m.nextBlockCmd(next))
 	}
 
 	t, tableCmd := m.table.Update(msg)
