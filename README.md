@@ -1,4 +1,5 @@
-**DISCLAIMER**: This project is not supported, and is subject to change. There are no compatibility guarantees. It was developed during a hackathon and isn't perfect. If you see any strange artifacts, try resizing the window to help the program re-orient itself.
+# **DISCLAIMER**
+This project is not supported, and is subject to change. There are no compatibility guarantees. It was developed during a hackathon and isn't perfect. If you see any strange artifacts, try resizing the window to help the program re-orient itself.
 
 # Algod Node UI
 
