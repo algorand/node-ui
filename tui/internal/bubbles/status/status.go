@@ -22,12 +22,20 @@ type Model struct {
 	Network messages.NetworkMsg
 	Err     error
 
-	style             *style.Styles
-	requestor         *messages.Requestor
+	style     *style.Styles
+	requestor *messages.Requestor
+
+	// fast catchup state
 	progress          progress.Model
 	processedAcctsPct float64
 	verifiedAcctsPct  float64
 	acquiredBlksPct   float64
+
+	// round time calculation state
+	startBlock  uint64
+	startTime   time.Time
+	latestBlock uint64
+	latestTime  time.Time
 }
 
 // New creates a status Model.
@@ -47,6 +55,19 @@ func (m Model) Init() tea.Cmd {
 	)
 }
 
+func (m Model) averageBlockTime() time.Duration {
+	numBlocks := int64(m.latestBlock - m.startBlock)
+
+	// Default round time during first seen block
+	if numBlocks == 0 {
+		return 4400 * time.Millisecond
+	}
+
+	runtime := m.latestTime.Sub(m.startTime)
+	dur := runtime.Nanoseconds() / numBlocks
+	return time.Duration(dur)
+}
+
 // Update is part of the tea.Model interface.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -56,6 +77,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 		m.Status = msg.Status
+
+		// Save the times for computing round time
+		if m.latestBlock < m.Status.LastRound {
+			m.latestBlock = m.Status.LastRound
+			m.latestTime = time.Now().Add(-time.Duration(m.Status.TimeSinceLastRound))
+
+			// Grab the start time
+			if m.startBlock == 0 {
+				m.startBlock = m.Status.LastRound
+				since := time.Duration(m.Status.TimeSinceLastRound)
+				m.startTime = time.Now().Add(-since)
+			}
+		}
+
 		if m.Status.CatchpointTotalAccounts > 0 {
 			m.processedAcctsPct = float64(m.Status.CatchpointProcessedAccounts) / float64(m.Status.CatchpointTotalAccounts)
 			m.verifiedAcctsPct = float64(m.Status.CatchpointVerifiedAccounts) / float64(m.Status.CatchpointTotalAccounts)
@@ -65,6 +100,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.verifiedAcctsPct = 1
 			m.acquiredBlksPct = float64(m.Status.CatchpointAcquiredBlocks) / float64(m.Status.CatchpointTotalBlocks)
 		}
+
 		return m, tea.Tick(100*time.Millisecond, func(time.Time) tea.Msg {
 			return m.requestor.GetStatusCmd()()
 		})
@@ -89,13 +125,6 @@ func formatVersion(v string) string {
 	return v[i:]
 }
 
-func formatNextVersion(last, next string, round uint64) string {
-	if last == next {
-		return "N/A"
-	}
-	return strconv.FormatUint(round, 10)
-}
-
 func writeProgress(b *strings.Builder, prefix string, progress progress.Model, pct float64) {
 	b.WriteString(prefix)
 	b.WriteString(progress.ViewAs(pct))
@@ -114,11 +143,6 @@ func (m Model) View() string {
 	height := style.TopHeight - 2 - 3 // 3 is the padding/margin/border
 	// status
 	if (m.Status != models.NodeStatus{}) {
-		nextVersion := formatNextVersion(
-			m.Status.LastVersion,
-			m.Status.NextVersion,
-			m.Status.NextVersionRound)
-
 		switch {
 		case m.Status.Catchpoint != "":
 			// Catchpoint view
@@ -153,11 +177,17 @@ func (m Model) View() string {
 				builder.WriteString(fmt.Sprintf("                 %s\n", bold.Render("No upgrade in progress.")))
 				height -= 2
 			} else {
+				// compute the time until the upgrade round and apply formatting to message
+				togo := m.Status.NextVersionRound - m.Status.LastRound
+				timeRemaining := time.Duration(int64(togo) * m.averageBlockTime().Nanoseconds()).Round(roundTo)
+				remaining := m.style.AccountBlueText.Render(
+					fmt.Sprintf("%d to go, %s", togo, timeRemaining))
+
 				// upgrade in progress
 				builder.WriteString(fmt.Sprintf("%s\n", bold.Render("Consensus Upgrade Pending")))
 				builder.WriteString(fmt.Sprintf("Current Protocol: %s\n", formatVersion(m.Status.LastVersion)))
 				builder.WriteString(fmt.Sprintf("Next Protocol:    %s\n", formatVersion(m.Status.NextVersion)))
-				builder.WriteString(fmt.Sprintf("Upgrade round:    %s\n", nextVersion))
+				builder.WriteString(fmt.Sprintf("Upgrade round:    %d (%s)\n", m.Status.NextVersionRound, remaining))
 				height -= 4
 			}
 		}
