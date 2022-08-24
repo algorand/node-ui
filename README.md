@@ -18,10 +18,12 @@ Use go1.17 or later and build with `make`.
 With no options, the UI will be displayed instead of starting a service.
 
 ## Local Algod
+If you're using the downloaded binary, use `./node-ui` instead of `./nodeui`
 ```
 ~$ ALGORAND_DATA=path/to/data/dir ./nodeui
 ```
 ## Remote Algod
+If you're using the downloaded binary, use `./node-ui` instead of `./nodeui`
 ```
 ~$ ./nodeui -t <algod api token> -u http://<url>
 ```
