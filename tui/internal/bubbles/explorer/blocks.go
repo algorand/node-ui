@@ -12,8 +12,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// blockItem is used by the list bubble.
-type blockItem struct {
+// BlockItem is used by the list bubble.
+type BlockItem struct {
 	Round uint64
 	Block models.BlockResponse
 }
@@ -54,7 +54,7 @@ func proposer(cert *map[string]interface{}) string {
 	return "<unknown>"
 }
 
-func computeBlockRow(b blockItem) string {
+func computeBlockRow(b BlockItem) string {
 	block := b.Block.Block
 
 	typeCount := make(map[types.TxType]uint)
@@ -117,7 +117,7 @@ func computeBlockRow(b blockItem) string {
 }
 
 // Render implements the Row interface to display a row of data.
-func (i blockItem) Render(w io.Writer, model table.Model, index int) {
+func (i BlockItem) Render(w io.Writer, model table.Model, index int) {
 	var cursor string
 	if index == model.Cursor() {
 		cursor = "> "
