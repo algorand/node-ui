@@ -9,16 +9,28 @@ import (
 
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
+	"github.com/algorand/go-algorand-sdk/types"
 
 	"github.com/algorand/node-ui/messages"
+	"github.com/algorand/node-ui/tui/internal/bubbles/explorer"
 	"github.com/algorand/node-ui/tui/internal/style"
+)
+
+const roundTo = time.Second / 10
+
+// consensus constants, in theory these could be modified by a consensus upgrade.
+const (
+	upgradeVoteRounds = 10000
+	upgradeThreshold  = 9000
 )
 
 // Model representing the status.
 type Model struct {
 	Status  models.NodeStatus
+	Header  types.BlockHeader
 	Network messages.NetworkMsg
 	Err     error
 
@@ -71,6 +83,18 @@ func (m Model) averageBlockTime() time.Duration {
 // Update is part of the tea.Model interface.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case explorer.BlocksMsg:
+		// Still initializing.
+		if m.Status.LastRound == 0 {
+			return m, nil
+		}
+
+		for _, blk := range msg.Blocks {
+			if uint64(blk.Block.Block.Round) == m.Status.LastRound {
+				m.Header = blk.Block.Block.BlockHeader
+			}
+		}
+		return m, nil
 	case messages.StatusMsg:
 		if msg.Error != nil {
 			m.Err = fmt.Errorf("error fetching status: %w", msg.Error)
@@ -80,14 +104,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Save the times for computing round time
 		if m.latestBlock < m.Status.LastRound {
+			since := time.Duration(m.Status.TimeSinceLastRound)
 			m.latestBlock = m.Status.LastRound
-			m.latestTime = time.Now().Add(-time.Duration(m.Status.TimeSinceLastRound))
+			m.latestTime = time.Now().Add(-since)
 
 			// Grab the start time
 			if m.startBlock == 0 {
 				m.startBlock = m.Status.LastRound
-				since := time.Duration(m.Status.TimeSinceLastRound)
-				m.startTime = time.Now().Add(-since)
+				m.startTime = m.latestTime
 			}
 		}
 
@@ -107,14 +131,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case messages.NetworkMsg:
 		m.Network = msg
+		return m, nil
 
 	case progress.FrameMsg:
 		progressModel, cmd := m.progress.Update(msg)
 		m.progress = progressModel.(progress.Model)
 		return m, cmd
-	}
 
-	return m, nil
+	default:
+		return m, nil
+	}
 }
 
 func formatVersion(v string) string {
@@ -129,6 +155,12 @@ func writeProgress(b *strings.Builder, prefix string, progress progress.Model, p
 	b.WriteString(prefix)
 	b.WriteString(progress.ViewAs(pct))
 	b.WriteString("\n")
+}
+
+func (m Model) calculateTimeToGo(start, end uint64, style lipgloss.Style) string {
+	rounds := end - start
+	timeRemaining := time.Duration(int64(rounds) * m.averageBlockTime().Nanoseconds()).Round(roundTo)
+	return style.Render(fmt.Sprintf("%d to go, %s", rounds, timeRemaining))
 }
 
 // View is part of the tea.Model interface.
@@ -166,12 +198,34 @@ func (m Model) View() string {
 			height -= 7
 		default:
 			builder.WriteString(fmt.Sprintf("Current round:   %s\n", key.Render(strconv.FormatUint(m.Status.LastRound, 10))))
-			roundTo := time.Second / 10
 			builder.WriteString(fmt.Sprintf("Block wait time: %s\n", time.Duration(m.Status.TimeSinceLastRound).Round(roundTo)))
 			builder.WriteString(fmt.Sprintf("Sync time:       %s\n", time.Duration(m.Status.CatchupTime).Round(roundTo)))
 			height -= 3
-			// TODO: Display consensus upgrade progress
-			if m.Status.LastVersion == m.Status.NextVersion {
+			if m.Header.UpgradeState != (types.UpgradeState{}) {
+				//remainingToUpgrade := m.calculateTimeToGo(
+				//	m.Status.LastRound, uint64(m.Header.NextProtocolSwitchOn), m.style.AccountBlueText)
+				remainingToVote := m.calculateTimeToGo(
+					m.Status.LastRound, uint64(m.Header.NextProtocolVoteBefore), m.style.AccountBlueText)
+
+				// calculate yes/no votes
+				votesToGo := uint64(m.Header.NextProtocolVoteBefore) - m.Status.LastRound
+				votes := upgradeVoteRounds - votesToGo
+				voteYes := m.Header.NextProtocolApprovals
+				voteNo := votes - voteYes
+				voteString := fmt.Sprintf("%d / %d", voteYes, voteNo)
+				yesPct := float64(voteYes) / float64(votes)
+				windowPct := float64(votes) / float64(upgradeVoteRounds)
+				builder.WriteString(fmt.Sprintf("%s\n", bold.Render("Consensus Upgrade Pending: Votes")))
+				builder.WriteString(fmt.Sprintf("Next Protocol:     %s\n", formatVersion(m.Header.NextProtocol)))
+				builder.WriteString(fmt.Sprintf("Yes/No votes:      %s (%.0f%%, 90%% required)\n", voteString, yesPct*100))
+				//builder.WriteString(fmt.Sprintf("Vote window:      %s (%f%%)\n", voteString, *100))
+				builder.WriteString(fmt.Sprintf("Vote window close: %d (%.0f%%, %s)\n",
+					m.Header.UpgradeState.NextProtocolVoteBefore,
+					windowPct*100,
+					remainingToVote))
+
+				height -= 5
+			} else if m.Status.LastVersion == m.Status.NextVersion {
 				// no upgrade in progress
 				builder.WriteString(fmt.Sprintf("Protocol:        %s\n", formatVersion(m.Status.LastVersion)))
 				builder.WriteString(fmt.Sprintf("                 %s\n", bold.Render("No upgrade in progress.")))
@@ -184,7 +238,7 @@ func (m Model) View() string {
 					fmt.Sprintf("%d to go, %s", togo, timeRemaining))
 
 				// upgrade in progress
-				builder.WriteString(fmt.Sprintf("%s\n", bold.Render("Consensus Upgrade Pending")))
+				builder.WriteString(fmt.Sprintf("%s\n", bold.Render("Consensus Upgrade Scheduled")))
 				builder.WriteString(fmt.Sprintf("Current Protocol: %s\n", formatVersion(m.Status.LastVersion)))
 				builder.WriteString(fmt.Sprintf("Next Protocol:    %s\n", formatVersion(m.Status.NextVersion)))
 				builder.WriteString(fmt.Sprintf("Upgrade round:    %d (%s)\n", m.Status.NextVersionRound, remaining))

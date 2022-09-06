@@ -26,7 +26,7 @@ const (
 
 const initialBlocks = 25
 
-type blocks []blockItem
+type blocks []BlockItem
 type txnItems []transactionItem
 
 // Model for the block explorer bubble.
@@ -67,8 +67,8 @@ func New(styles *style.Styles, requestor *messages.Requestor, width, widthMargin
 
 // BlocksMsg contains new block information.
 type BlocksMsg struct {
-	blocks []blockItem
-	err    error
+	Blocks []BlockItem
+	Err    error
 }
 
 // initBlocksCmd is the initializer command.
@@ -76,7 +76,7 @@ func (m Model) initBlocksCmd() tea.Msg {
 	status, err := m.requestor.Client.Status().Do(context.Background())
 	if err != nil {
 		return BlocksMsg{
-			err: err,
+			Err: err,
 		}
 	}
 	return m.getBlocks(status.LastRound-initialBlocks, status.LastRound)()
@@ -88,16 +88,16 @@ func (m *Model) getBlocks(first, last uint64) tea.Cmd {
 		for i := last; i >= first; i-- {
 			block, err := m.requestor.Client.BlockRaw(i).Do(context.Background())
 			if err != nil {
-				result.err = err
+				result.Err = err
 				return result
 			}
-			item := blockItem{Round: i}
+			item := BlockItem{Round: i}
 			err = msgpack.Decode(block, &item.Block)
 			if err != nil {
-				result.err = err
+				result.Err = err
 				return result
 			}
-			result.blocks = append(result.blocks, item)
+			result.Blocks = append(result.Blocks, item)
 		}
 		return result
 	}
@@ -116,14 +116,14 @@ func (m Model) nextBlockCmd(round uint64) tea.Cmd {
 	return func() tea.Msg {
 		_, err := m.requestor.Client.StatusAfterBlock(round).Do(context.Background())
 		if err != nil {
-			return BlocksMsg{err: err}
+			return BlocksMsg{Err: err}
 		}
 		blk, err := m.requestor.Client.BlockRaw(round).Do(context.Background())
 		if err != nil {
-			return BlocksMsg{err: err}
+			return BlocksMsg{Err: err}
 		}
-		item := blockItem{Round: round}
-		//err = msgpack.Decode(blk, &item.Block)
+		item := BlockItem{Round: round}
+		//Err = msgpack.Decode(blk, &item.Block)
 		err = lenientDecode(blk, &item.Block)
 		if err != nil {
 			return err
@@ -131,11 +131,11 @@ func (m Model) nextBlockCmd(round uint64) tea.Cmd {
 
 		if err != nil {
 			return BlocksMsg{
-				err: err,
+				Err: err,
 			}
 		}
 		return BlocksMsg{
-			blocks: []blockItem{item},
+			Blocks: []BlockItem{item},
 		}
 	}
 }
@@ -163,7 +163,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// Select transactions.
 				m.state = paysetState
 				switch block := m.table.SelectedRow().(type) {
-				case blockItem:
+				case BlockItem:
 					m.transactions = make([]transactionItem, 0)
 					for _, txn := range block.Block.Block.Payset {
 						t := txn
@@ -194,9 +194,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.setSize(msg.Width, msg.Height)
 
 	case BlocksMsg:
-		// append blocks
+		// append Blocks
 		backup := m.blocks
-		m.blocks = msg.blocks
+		m.blocks = msg.Blocks
 		m.blocks = append(m.blocks, backup...)
 		next := uint64(0)
 		if len(m.blocks) > 0 {
