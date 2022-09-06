@@ -104,14 +104,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Save the times for computing round time
 		if m.latestBlock < m.Status.LastRound {
+			since := time.Duration(m.Status.TimeSinceLastRound)
 			m.latestBlock = m.Status.LastRound
-			m.latestTime = time.Now().Add(-time.Duration(m.Status.TimeSinceLastRound))
+			m.latestTime = time.Now().Add(-since)
 
 			// Grab the start time
 			if m.startBlock == 0 {
 				m.startBlock = m.Status.LastRound
-				since := time.Duration(m.Status.TimeSinceLastRound)
-				m.startTime = time.Now().Add(-since)
+				m.startTime = m.latestTime
 			}
 		}
 
