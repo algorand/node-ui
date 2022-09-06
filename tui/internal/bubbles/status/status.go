@@ -21,6 +21,12 @@ import (
 
 const roundTo = time.Second / 10
 
+// consensus constants, in theory these could be modified by a consensus upgrade.
+const (
+	upgradeVoteRounds = 10000
+	upgradeThreshold  = 9000
+)
+
 // Model representing the status.
 type Model struct {
 	Status  models.NodeStatus
@@ -196,17 +202,27 @@ func (m Model) View() string {
 			builder.WriteString(fmt.Sprintf("Sync time:       %s\n", time.Duration(m.Status.CatchupTime).Round(roundTo)))
 			height -= 3
 			if m.Header.UpgradeState != (types.UpgradeState{}) {
-				remainingToUpgrade := m.calculateTimeToGo(
-					m.Status.LastRound, uint64(m.Header.NextProtocolSwitchOn), m.style.AccountBlueText)
+				//remainingToUpgrade := m.calculateTimeToGo(
+				//	m.Status.LastRound, uint64(m.Header.NextProtocolSwitchOn), m.style.AccountBlueText)
 				remainingToVote := m.calculateTimeToGo(
 					m.Status.LastRound, uint64(m.Header.NextProtocolVoteBefore), m.style.AccountBlueText)
 
+				// calculate yes/no votes
+				votesToGo := uint64(m.Header.NextProtocolVoteBefore) - m.Status.LastRound
+				votes := upgradeVoteRounds - votesToGo
+				voteYes := m.Header.NextProtocolApprovals
+				voteNo := votes - voteYes
+				voteString := fmt.Sprintf("%d / %d", voteYes, voteNo)
+				yesPct := float64(voteYes) / float64(votes)
+				windowPct := float64(votes) / float64(upgradeVoteRounds)
 				builder.WriteString(fmt.Sprintf("%s\n", bold.Render("Consensus Upgrade Pending: Votes")))
-				//builder.WriteString(fmt.Sprintf("Current Protocol:  %s\n", formatVersion(m.Status.LastVersion)))
 				builder.WriteString(fmt.Sprintf("Next Protocol:     %s\n", formatVersion(m.Header.NextProtocol)))
-				builder.WriteString(fmt.Sprintf("Yes votes:         %d\n", m.Header.NextProtocolApprovals))
-				builder.WriteString(fmt.Sprintf("Vote window close: %d (%s)\n", m.Header.UpgradeState.NextProtocolVoteBefore, remainingToVote))
-				builder.WriteString(fmt.Sprintf("Upgrade round:     %d (%s)\n", m.Header.UpgradeState.NextProtocolSwitchOn, remainingToUpgrade))
+				builder.WriteString(fmt.Sprintf("Yes/No votes:      %s (%.0f%%, 90%% required)\n", voteString, yesPct*100))
+				//builder.WriteString(fmt.Sprintf("Vote window:      %s (%f%%)\n", voteString, *100))
+				builder.WriteString(fmt.Sprintf("Vote window close: %d (%.0f%%, %s)\n",
+					m.Header.UpgradeState.NextProtocolVoteBefore,
+					windowPct*100,
+					remainingToVote))
 
 				height -= 5
 			} else if m.Status.LastVersion == m.Status.NextVersion {
