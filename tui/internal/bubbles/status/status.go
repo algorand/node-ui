@@ -201,7 +201,7 @@ func (m Model) View() string {
 			builder.WriteString(fmt.Sprintf("Block wait time: %s\n", time.Duration(m.Status.TimeSinceLastRound).Round(roundTo)))
 			builder.WriteString(fmt.Sprintf("Sync time:       %s\n", time.Duration(m.Status.CatchupTime).Round(roundTo)))
 			height -= 3
-			if m.Header.UpgradeState != (types.UpgradeState{}) {
+			if m.Header.UpgradeState != (types.UpgradeState{}) && (uint64(m.Header.UpgradeState.NextProtocolVoteBefore) > m.Status.LastRound) {
 				//remainingToUpgrade := m.calculateTimeToGo(
 				//	m.Status.LastRound, uint64(m.Header.NextProtocolSwitchOn), m.style.AccountBlueText)
 				remainingToVote := m.calculateTimeToGo(
