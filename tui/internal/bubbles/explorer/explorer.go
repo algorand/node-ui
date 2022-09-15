@@ -92,7 +92,7 @@ func (m *Model) getBlocks(first, last uint64) tea.Cmd {
 				return result
 			}
 			item := BlockItem{Round: i}
-			err = msgpack.Decode(block, &item.Block)
+			err = lenientDecode(block, &item.Block)
 			if err != nil {
 				result.Err = err
 				return result
@@ -123,7 +123,6 @@ func (m Model) nextBlockCmd(round uint64) tea.Cmd {
 			return BlocksMsg{Err: err}
 		}
 		item := BlockItem{Round: round}
-		//Err = msgpack.Decode(blk, &item.Block)
 		err = lenientDecode(blk, &item.Block)
 		if err != nil {
 			return err
