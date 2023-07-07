@@ -14,6 +14,7 @@ import (
 
 	"github.com/algorand/node-ui/messages"
 	"github.com/algorand/node-ui/tui"
+	"github.com/algorand/node-ui/version"
 )
 
 var command *cobra.Command
@@ -32,9 +33,14 @@ type arguments struct {
 	algodToken       string
 	algodDataDir     string
 	addressWatchList []string
+	versionFlag      bool
 }
 
 func run(args arguments) {
+	if args.versionFlag {
+		fmt.Println(version.LongVersion())
+		os.Exit(0)
+	}
 	request := getRequestorOrExit(args.algodDataDir, args.algodURL, args.algodToken)
 	addresses := getAddressesOrExit(args.addressWatchList)
 	tui.Start(args.tuiPort, request, addresses)
@@ -57,14 +63,15 @@ func init() {
 	command.Flags().StringVarP(&args.algodToken, "algod-token", "t", "", "Algod REST API token.")
 	command.Flags().StringVarP(&args.algodDataDir, "algod-data-dir", "d", "", "Path to Algorand data directory, when set it overrides the ALGORAND_DATA environment variable.")
 	command.Flags().StringArrayVarP(&args.addressWatchList, "watch-list", "w", nil, "Account addresses to watch in the accounts tab, may provide more than once to watch multiple accounts.")
+	command.Flags().BoolVarP(&args.versionFlag, "version", "v", false, "Print version information and exit.")
 }
 
 func getRequestorOrExit(algodDataDir, url, token string) *messages.Requestor {
 	// Initialize from -d, ALGORAND_DATA, or provided URL/Token
 
 	if algodDataDir != "" && (url != "" || token != "") {
-			fmt.Fprintln(os.Stderr, "Do not use -u/-t with -d.")
-			os.Exit(1)
+		fmt.Fprintln(os.Stderr, "Do not use -u/-t with -d.")
+		os.Exit(1)
 	}
 
 	// If url/token are missing, attempt to use environment variable.

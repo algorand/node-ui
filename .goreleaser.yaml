@@ -17,6 +17,16 @@ builds:
       - linux
       - windows
       - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags: >
+      -s -w
+      -X github.com/algorand/node-ui/version.Hash={{.FullCommit}}
+      -X github.com/algorand/node-ui/version.ShortHash={{.ShortCommit}}
+      -X github.com/algorand/node-ui/version.CompileTime={{.Timestamp}}
+      -X github.com/algorand/node-ui/version.ReleaseVersion={{.Version}}
+
 archives:
   - replacements:
       darwin: Darwin
