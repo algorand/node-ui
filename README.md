@@ -69,6 +69,5 @@ Contributions are welcome! There are no plans to actively maintain this project,
 # How to create a new release
 
 1. Create a tag: `git tag -a v_._._ -m "v_._._" && git push origin v_._._`
-2. Make sure the dist directory does not exist: `rm -rf dist`
-3. Export a GitHub token with `repo` scope: `export GITHUB_TOKEN=_`
-4. Install & run goreleaser: `goreleaser release`
+2. Push the tag.
+3. CI should create a release, attach it to GitHub and publish images to docker hub.
