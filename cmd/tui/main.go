@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -92,13 +91,13 @@ func getRequestorOrExit(algodDataDir, url, token string) *messages.Requestor {
 		tokenpath := filepath.Join(algodDataDir, "algod.token")
 
 		var netaddrbytes []byte
-		netaddrbytes, err := ioutil.ReadFile(netpath)
+		netaddrbytes, err := os.ReadFile(netpath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to read URL from file (%s): %s\n", netpath, err.Error())
 			os.Exit(1)
 		}
 		url = strings.TrimSpace(string(netaddrbytes))
-		tokenBytes, err := ioutil.ReadFile(tokenpath)
+		tokenBytes, err := os.ReadFile(tokenpath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to read Token from file (%s): %s\n", tokenpath, err.Error())
 			os.Exit(1)
