@@ -1,14 +1,17 @@
-# This is an example .goreleaser.yml file with some sensible defaults.
-# Make sure to check the documentation at https://goreleaser.com
-project_name: node-ui
+project_name: nodeui
+env:
+  - DOCKER_NAME=algorand/nodeui
+
 before:
   hooks:
     # You may remove this if you don't use go modules.
     - go mod tidy
     # you may remove this if you don't need go generate
     - go generate ./...
+
 universal_binaries:
   - replace: true
+
 builds:
   - main: cmd/tui/main.go
     env:
@@ -26,6 +29,45 @@ builds:
       -X github.com/algorand/node-ui/version.ShortHash={{.ShortCommit}}
       -X github.com/algorand/node-ui/version.CompileTime={{.Timestamp}}
       -X github.com/algorand/node-ui/version.ReleaseVersion={{.Version}}
+
+dockers:
+  - use: buildx
+    goos: linux
+    goarch: amd64
+    image_templates:
+    - "{{ .Env.DOCKER_NAME }}:latest{{ if .IsSnapshot }}-snapshot{{ end }}-amd64"
+    - "{{ .Env.DOCKER_NAME }}:{{ .Version }}-amd64"
+    build_flag_templates:
+    - --platform=linux/amd64
+    - --label=org.opencontainers.image.title={{ .ProjectName }}
+    - --label=org.opencontainers.image.version={{ .Version }}
+    - --label=org.opencontainers.image.created={{ .Date }}
+    - --label=org.opencontainers.image.revision={{ .FullCommit }}
+    - --label=org.opencontainers.image.licenses=MIT
+  - use: buildx
+    goos: linux
+    goarch: arm64
+    image_templates:
+    - "{{ .Env.DOCKER_NAME }}:latest{{ if .IsSnapshot }}-snapshot{{ end }}-arm64"
+    - "{{ .Env.DOCKER_NAME }}:{{ .Version }}-arm64"
+    build_flag_templates:
+    - --platform=linux/arm64
+    - --label=org.opencontainers.image.title={{ .ProjectName }}
+    - --label=org.opencontainers.image.version={{ .Version }}
+    - --label=org.opencontainers.image.created={{ .Date }}
+    - --label=org.opencontainers.image.revision={{ .FullCommit }}
+    - --label=org.opencontainers.image.licenses=MIT
+
+# automatically select amd64/arm64 when requesting "algorand/indexer"
+docker_manifests:
+  - name_template: "algorand/indexer:{{ .Version }}"
+    image_templates:
+    - "algorand/indexer:{{ .Version }}-amd64"
+    - "algorand/indexer:{{ .Version }}-arm64"
+  - name_template: "algorand/indexer:latest{{ if .IsSnapshot }}-snapshot{{ end }}"
+    image_templates:
+    - "algorand/indexer:latest{{ if .IsSnapshot }}-snapshot{{ end }}-amd64"
+    - "algorand/indexer:latest{{ if .IsSnapshot }}-snapshot{{ end }}-arm64"
 
 archives:
   - replacements:
