@@ -7,7 +7,7 @@ import (
 
 	table "github.com/calyptia/go-bubble-table"
 
-	"github.com/algorand/go-algorand-sdk/types"
+	"github.com/algorand/go-algorand-sdk/v2/types"
 )
 
 // transactionItem is used by the list bubble.

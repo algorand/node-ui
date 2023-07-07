@@ -16,7 +16,7 @@ import (
 	lm "github.com/charmbracelet/wish/logging"
 	"github.com/gliderlabs/ssh"
 
-	"github.com/algorand/go-algorand-sdk/types"
+	"github.com/algorand/go-algorand-sdk/v2/types"
 
 	"github.com/algorand/node-ui/messages"
 	"github.com/algorand/node-ui/tui/internal/model"

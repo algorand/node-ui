@@ -9,7 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/algorand/go-algorand-sdk/encoding/msgpack"
+	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 
 	"github.com/algorand/node-ui/messages"
 	"github.com/algorand/node-ui/tui/internal/constants"
