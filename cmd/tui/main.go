@@ -1,12 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/spf13/cobra"
+	"github.com/urfave/cli/v3"
 
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/v2/types"
@@ -16,10 +17,8 @@ import (
 	"github.com/algorand/node-ui/version"
 )
 
-var command *cobra.Command
-
 func main() {
-	err := command.Execute()
+	err := makeCommand().Run(context.Background(), os.Args)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Problem running command: %s\n", err.Error())
 	}
@@ -45,24 +44,65 @@ func run(args arguments) {
 	tui.Start(args.tuiPort, request, addresses)
 }
 
-func init() {
+func makeCommand() *cli.Command {
 	var args arguments
-
-	command = &cobra.Command{
-		Use:   "",
-		Short: "Launch terminal user interface",
-		Long:  "Node UI is a terminal user interface that displays information about a target algod instance.",
-		Run: func(_ *cobra.Command, _ []string) {
+	return &cli.Command{
+		Name:  "node-ui",
+		Usage: "Launch the Algorand Node UI.",
+		Flags: []cli.Flag{
+			&cli.Uint64Flag{
+				Name:        "tui-port",
+				Aliases:     []string{"p"},
+				Usage:       "Port address to host TUI from, set to 0 to run directly.",
+				Value:       0,
+				Sources:     cli.EnvVars("TUI_PORT"),
+				Destination: &args.tuiPort,
+			},
+			&cli.StringFlag{
+				Name:        "algod-url",
+				Aliases:     []string{"u"},
+				Usage:       "Algod URL and port to monitor, formatted like localhost:1234.",
+				Value:       "",
+				Sources:     cli.EnvVars("ALGOD_URL"),
+				Destination: &args.algodURL,
+			},
+			&cli.StringFlag{
+				Name:        "algod-token",
+				Aliases:     []string{"t"},
+				Usage:       "Algod REST API token.",
+				Value:       "",
+				Sources:     cli.EnvVars("ALGOD_TOKEN"),
+				Destination: &args.algodToken,
+			},
+			&cli.StringFlag{
+				Name:        "algod-data-dir",
+				Aliases:     []string{"d"},
+				Usage:       "Path to Algorand data directory, when set it overrides the ALGORAND_DATA environment variable.",
+				Value:       "",
+				Sources:     cli.EnvVars("ALGORAND_DATA"),
+				Destination: &args.algodDataDir,
+			},
+			&cli.StringSliceFlag{
+				Name:        "watch-list",
+				Aliases:     []string{"w"},
+				Usage:       "Account addresses to watch in the accounts tab, may provide more than once to watch multiple accounts. Use comma separated values if providing more than one account with an environment variable.",
+				Value:       nil,
+				Sources:     cli.EnvVars("WATCH_LIST"),
+				Destination: &args.addressWatchList,
+			},
+			&cli.BoolFlag{
+				Name:        "version",
+				Aliases:     []string{"v"},
+				Usage:       "Print version information and exit.",
+				Value:       false,
+				Destination: &args.versionFlag,
+			},
+		},
+		Action: func(c *cli.Context) error {
 			run(args)
+			return nil
 		},
 	}
-
-	command.Flags().Uint64VarP(&args.tuiPort, "tui-port", "p", 0, "Port address to host TUI from, set to 0 to run directly.")
-	command.Flags().StringVarP(&args.algodURL, "algod-url", "u", "", "Algod URL and port to monitor, formatted like localhost:1234.")
-	command.Flags().StringVarP(&args.algodToken, "algod-token", "t", "", "Algod REST API token.")
-	command.Flags().StringVarP(&args.algodDataDir, "algod-data-dir", "d", "", "Path to Algorand data directory, when set it overrides the ALGORAND_DATA environment variable.")
-	command.Flags().StringArrayVarP(&args.addressWatchList, "watch-list", "w", nil, "Account addresses to watch in the accounts tab, may provide more than once to watch multiple accounts.")
-	command.Flags().BoolVarP(&args.versionFlag, "version", "v", false, "Print version information and exit.")
 }
 
 func getRequestorOrExit(algodDataDir, url, token string) *messages.Requestor {
