@@ -77,7 +77,7 @@ func makeCommand() *cli.Command {
 			&cli.StringFlag{
 				Name:        "algod-data-dir",
 				Aliases:     []string{"d"},
-				Usage:       "Path to Algorand data directory, when set it overrides the ALGORAND_DATA environment variable.",
+				Usage:       "Path to Algorand data directory.",
 				Value:       "",
 				Sources:     cli.EnvVars("ALGORAND_DATA"),
 				Destination: &args.algodDataDir,
