@@ -58,16 +58,16 @@ dockers:
     - --label=org.opencontainers.image.revision={{ .FullCommit }}
     - --label=org.opencontainers.image.licenses=MIT
 
-# automatically select amd64/arm64 when requesting "algorand/indexer"
+# automatically select amd64/arm64 when using image.
 docker_manifests:
-  - name_template: "algorand/indexer:{{ .Version }}"
+  - name_template: "{{ .Env.DOCKER_NAME }}:{{ .Version }}"
     image_templates:
-    - "algorand/indexer:{{ .Version }}-amd64"
-    - "algorand/indexer:{{ .Version }}-arm64"
-  - name_template: "algorand/indexer:latest{{ if .IsSnapshot }}-snapshot{{ end }}"
+    - "{{ .Env.DOCKER_NAME }}:{{ .Version }}-amd64"
+    - "{{ .Env.DOCKER_NAME }}:{{ .Version }}-arm64"
+  - name_template: "{{ .Env.DOCKER_NAME }}:latest{{ if .IsSnapshot }}-snapshot{{ end }}"
     image_templates:
-    - "algorand/indexer:latest{{ if .IsSnapshot }}-snapshot{{ end }}-amd64"
-    - "algorand/indexer:latest{{ if .IsSnapshot }}-snapshot{{ end }}-arm64"
+    - "{{ .Env.DOCKER_NAME }}:latest{{ if .IsSnapshot }}-snapshot{{ end }}-amd64"
+    - "{{ .Env.DOCKER_NAME }}:latest{{ if .IsSnapshot }}-snapshot{{ end }}-arm64"
 
 archives:
   - name_template: >-
