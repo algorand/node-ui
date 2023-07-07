@@ -11,10 +11,10 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	bm "github.com/charmbracelet/wish/bubbletea"
 	lm "github.com/charmbracelet/wish/logging"
-	"github.com/gliderlabs/ssh"
 
 	"github.com/algorand/go-algorand-sdk/v2/types"
 
@@ -24,7 +24,7 @@ import (
 
 const host = "0.0.0.0"
 
-func getTeaHandler(model model.Model) func(ssh.Session) (tea.Model, []tea.ProgramOption) {
+func getTeaHandler(model model.Model) bm.Handler {
 	return func(_ ssh.Session) (tea.Model, []tea.ProgramOption) {
 		return model, []tea.ProgramOption{tea.WithAltScreen(), tea.WithMouseCellMotion()}
 	}
@@ -34,10 +34,10 @@ func getTeaHandler(model model.Model) func(ssh.Session) (tea.Model, []tea.Progra
 func Start(port uint64, requestor *messages.Requestor, addresses []types.Address) {
 	model := model.New(requestor, addresses)
 
+	// Run directly
 	if port == 0 {
-		// Run directly
 		p := tea.NewProgram(model, tea.WithAltScreen(), tea.WithMouseCellMotion())
-		if err := p.Start(); err != nil {
+		if _, err := p.Run(); err != nil {
 			fmt.Printf("Error in UI: %v", err)
 			os.Exit(1)
 		}
@@ -51,6 +51,7 @@ func Start(port uint64, requestor *messages.Requestor, addresses []types.Address
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	sshServer, err := wish.NewServer(
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(path.Join(dirname, ".ssh/term_info_ed25519")),
